@@ -5,13 +5,16 @@
   "main": "index.js",
   "scripts": {
     "build": "tsup src/**/*.ts --format cjs,esm --dts",
-    "lint": "tsc"
+    "lint": "tsc",
+    "dev": "vitest",
+    "test": "vitest run"
   },
   "author": "Jesse Kelly",
   "license": "ISC",
   "devDependencies": {
     "husky": "^8.0.3",
     "tsup": "^6.6.3",
-    "typescript": "^4.9.5"
+    "typescript": "^4.9.5",
+    "vitest": "^0.29.3"
   }
 }
