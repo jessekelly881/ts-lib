@@ -1,8 +1,10 @@
 {
   "name": "ts-library",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "",
-  "main": "index.js",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
   "scripts": {
     "build": "tsup src/**/*.ts --format cjs,esm --dts",
     "lint": "tsc",
@@ -11,7 +13,7 @@
     "ci": "pnpm run lint && pnpm run test && pnpm run build"
   },
   "author": "Jesse Kelly",
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
     "husky": "^8.0.3",
     "tsup": "^6.6.3",
