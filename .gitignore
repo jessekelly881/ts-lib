@@ -1,5 +1,4 @@
 node_modules/tsup
 node_modules
 .pnpm-debug.log
-pnpm-lock.yaml
 dist
