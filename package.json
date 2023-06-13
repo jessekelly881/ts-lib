@@ -19,7 +19,8 @@
     "dev": "vitest",
     "test": "vitest run",
     "ci": "pnpm run lint && pnpm run test && pnpm run build",
-    "release": "pnpm run ci && changeset publish"
+    "release": "pnpm run ci && changeset publish",
+    "docs": "docgen"
   },
   "author": "Jesse Kelly",
   "license": "MIT",
@@ -29,5 +30,8 @@
     "tsup": "^6.6.3",
     "typescript": "^4.9.5",
     "vitest": "^0.29.3"
+  },
+  "dependencies": {
+    "@effect/docgen": "^0.1.1"
   }
 }
