@@ -2,4 +2,3 @@ node_modules/tsup
 node_modules
 .pnpm-debug.log
 dist
-docs/
