@@ -19,7 +19,7 @@
     "dev": "vitest",
     "test": "vitest run",
     "ci": "pnpm run lint && pnpm run test && pnpm run build",
-    "release": "pnpm run ci && changeset publish",
+    "publish": "changeset publish",
     "docs": "docgen"
   },
   "author": "Jesse Kelly",
