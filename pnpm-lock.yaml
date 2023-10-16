@@ -1,12 +1,16 @@
 lockfileVersion: '6.0'
 
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
 devDependencies:
   '@changesets/cli':
     specifier: ^2.26.0
     version: 2.26.2
   '@effect/docgen':
-    specifier: ^0.1.8
-    version: 0.1.8(@types/node@20.8.4)(typescript@5.2.2)
+    specifier: ^0.2.0
+    version: 0.2.0(@types/node@20.8.4)(typescript@5.2.2)
   '@types/node':
     specifier: ^20.8.4
     version: 20.8.4
@@ -258,8 +262,8 @@ packages:
       '@jridgewell/trace-mapping': 0.3.9
     dev: true
 
-  /@effect/docgen@0.1.8(@types/node@20.8.4)(typescript@5.2.2):
-    resolution: {integrity: sha512-o3iLXvbkkxEuRUnJ6hJDEXHfeDfA86iVkQm/s8heWQQgD7UBZ7TTWkDIobFaXRKU8qKoCKPSgmLlSq0F3IsBgw==}
+  /@effect/docgen@0.2.0(@types/node@20.8.4)(typescript@5.2.2):
+    resolution: {integrity: sha512-QVQmQESrw9Ayn6LCxlnK+mvFCpkGGtUOtTnp4faTjJ5cC9sfII3pzzaQFXqFoJlsYA9qioJwUb4SBL6h4s7KHA==}
     engines: {node: '>=16.17.1'}
     hasBin: true
     peerDependencies:
@@ -268,9 +272,8 @@ packages:
       doctrine: 3.0.0
       fs-extra: 11.1.1
       glob: 10.3.10
-      markdown-toc: github.com/effect-ts/markdown-toc/4bfeb0f140105440ea0d12df2fa23199cc3ec1d5
+      markdown-toc: git/github.com+effect-ts/markdown-toc/4bfeb0f140105440ea0d12df2fa23199cc3ec1d5
       prettier: 2.8.8
-      rimraf: 5.0.5
       ts-morph: 19.0.0
       ts-node: 10.9.1(@types/node@20.8.4)(typescript@5.2.2)
       tsconfck: 2.1.2(typescript@5.2.2)
@@ -3309,14 +3312,6 @@ packages:
       glob: 7.1.6
     dev: true
 
-  /rimraf@5.0.5:
-    resolution: {integrity: sha512-CqDakW+hMe/Bz202FPEymy68P+G50RfMQK+Qo5YUqc9SPipvbGjCGKd0RSKEelbsfQuw3g5NZDSrlZZAJurH1A==}
-    engines: {node: '>=14'}
-    hasBin: true
-    dependencies:
-      glob: 10.3.10
-    dev: true
-
   /rollup@3.19.1:
     resolution: {integrity: sha512-lAbrdN7neYCg/8WaoWn/ckzCtz+jr70GFfYdlf50OF7387HTg+wiuiqJRFYawwSPpqfqDNYqK7smY/ks2iAudg==}
     engines: {node: '>=14.18.0', npm: '>=8.0.0'}
@@ -4234,8 +4229,8 @@ packages:
     engines: {node: '>=12.20'}
     dev: true
 
-  github.com/effect-ts/markdown-toc/4bfeb0f140105440ea0d12df2fa23199cc3ec1d5:
-    resolution: {tarball: https://codeload.github.com/effect-ts/markdown-toc/tar.gz/4bfeb0f140105440ea0d12df2fa23199cc3ec1d5}
+  git/github.com+effect-ts/markdown-toc/4bfeb0f140105440ea0d12df2fa23199cc3ec1d5:
+    resolution: {commit: 4bfeb0f140105440ea0d12df2fa23199cc3ec1d5, repo: git@github.com:effect-ts/markdown-toc.git, type: git}
     name: markdown-toc
     version: 1.2.0
     engines: {node: '>=0.10.0'}
@@ -4254,7 +4249,3 @@ packages:
       repeat-string: 1.6.1
       strip-color: 0.1.0
     dev: true
-
-settings:
-  autoInstallPeers: true
-  excludeLinksFromLockfile: false
