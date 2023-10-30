@@ -26,7 +26,7 @@
   "license": "MIT",
   "devDependencies": {
     "@changesets/cli": "^2.26.0",
-    "@effect/docgen": "^0.1.8",
+    "@effect/docgen": "^0.2.1",
     "@types/node": "^20.8.4",
     "@typescript-eslint/eslint-plugin": "^6.7.5",
     "@typescript-eslint/parser": "^6.7.5",
