@@ -1,2 +1,2 @@
 # ts-lib
-Barebones typescript library boilerplate
+Barebones typescript library boilerplate.
