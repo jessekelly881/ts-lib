@@ -10,7 +10,7 @@ updates:
     schedule:
       interval: "weekly"
     groups:
-       dependencies:
+       npm:
           patterns:
             - "*"
 
@@ -20,6 +20,6 @@ updates:
     schedule:
       interval: "weekly"
     groups:
-       dependencies:
+       github-actions:
           patterns:
             - "*"
