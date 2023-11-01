@@ -1,7 +1,9 @@
 {
   "compilerOptions": {
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
     "noEmit": true,
-    "target":"ES2016",
+    "target": "ES2016",
     "module": "commonjs",
     "noImplicitAny": true,
     "removeComments": true,
@@ -9,6 +11,12 @@
     "preserveConstEnums": true,
     "esModuleInterop": true
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "**/*.spec.ts"]
+  "include": [
+    "src/**/*",
+    "plopfile.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "**/*.spec.ts"
+  ]
 }
