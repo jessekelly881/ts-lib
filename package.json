@@ -16,8 +16,8 @@
   "scripts": {
     "build": "tsup src/**/*.ts --format cjs,esm --dts",
     "lint": "eslint 'src/**/*.{ts,tsx}'",
-    "dev": "vitest",
-    "test": "vitest run",
+    "dev": "vitest --reporter=dot",
+    "test": "vitest run --reporter=basic",
     "ci": "pnpm run lint && pnpm run test && pnpm run build",
     "publish": "changeset publish",
     "docs": "docgen",
