@@ -16,5 +16,5 @@
     },
     // Use 'forwardPorts' to make a list of ports inside the container available locally.
     // "forwardPorts": [],
-    "postCreateCommand": "npm install -g pnpm && pnpm install && git config core.ignorecase false && git config core.autocrlf input && apt-get -y remove yarn"
+    "postCreateCommand": "pnpm install"
 }
