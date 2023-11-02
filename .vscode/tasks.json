@@ -6,7 +6,7 @@
 			"type": "npm",
 			"script": "dev",
 			"presentation": {
-				"reveal": "always",
+				"reveal": "silent",
 				"panel": "new"
 			},
 			"runOptions": {
