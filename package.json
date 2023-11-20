@@ -37,7 +37,7 @@
     "eslint-plugin-deprecation": "^2.0.0",
     "husky": "^8.0.3",
     "plop": "^4.0.0",
-    "tsup": "^7.2.0",
+    "tsup": "^8.0.0",
     "typescript": "^5.2.2",
     "vitest": "^0.34.2"
   }
