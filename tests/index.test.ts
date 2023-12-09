@@ -1,5 +1,8 @@
-import { describe, expect, it } from "vitest";
+import { fc, test } from "@fast-check/vitest";
+import { describe } from "vitest";
 
 describe("tests", () => {
-	it("add", () => expect(1).toBe(1));
+	test.prop([fc.integer(), fc.integer()])("add", (a, b) => {
+		return a + b === b + a;
+	});
 });
