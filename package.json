@@ -37,7 +37,7 @@
     "eslint": "^8.51.0",
     "eslint-plugin-deprecation": "^2.0.0",
     "fast-check": "^3.14.0",
-    "husky": "^8.0.3",
+    "husky": "^9.0.7",
     "plop": "^4.0.0",
     "tsup": "^8.0.1",
     "typescript": "^5.2.2",
