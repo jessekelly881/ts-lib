@@ -12,3 +12,4 @@ plopfile.js
 .husky
 .devcontainer
 docgen.json
+.eslintrc.js
