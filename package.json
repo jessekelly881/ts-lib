@@ -22,8 +22,7 @@
     "ci": "pnpm run lint && pnpm run test && pnpm run build",
     "publish": "changeset publish",
     "docs": "docgen",
-    "gen": "plop",
-    "postinstall": "husky install"
+    "gen": "plop"
   },
   "author": "Jesse Kelly",
   "license": "MIT",
