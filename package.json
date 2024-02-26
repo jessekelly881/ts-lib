@@ -38,6 +38,7 @@
     "eslint-plugin-deprecation": "^2.0.0",
     "fast-check": "^3.14.0",
     "husky": "^9.0.7",
+    "jsdom": "^24.0.0",
     "plop": "^4.0.0",
     "tsup": "^8.0.1",
     "typescript": "^5.2.2",
