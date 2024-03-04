@@ -24,7 +24,8 @@
     "docs": "docgen",
     "gen": "plop",
     "dtslint": "dtslint dtslint",
-    "circular": "madge --extensions ts --circular --no-color --no-spinner src"
+    "circular": "madge --extensions ts --circular --no-color --no-spinner src",
+    "check": "tsc -b tsconfig.json"
 
   },
   "author": "Jesse Kelly",
