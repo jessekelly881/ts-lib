@@ -11,11 +11,15 @@ runs:
   steps:
     - name: Install pnpm
       uses: pnpm/action-setup@v2
+      with:
+        version: 7
+        
     - name: Install node
       uses: actions/setup-node@v3
       with:
         cache: pnpm
         node-version: ${{ inputs.node-version }}
+
     - name: Install dependencies
       shell: bash
       run: pnpm install --no-frozen-lockfile
