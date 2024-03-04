@@ -14,7 +14,7 @@ devDependencies:
     specifier: ^2.26.0
     version: 2.27.1
   '@effect/docgen':
-    specifier: ^0.3.6
+    specifier: ^0.3.8
     version: 0.3.8(tsx@4.7.1)(typescript@5.3.3)
   '@fast-check/vitest':
     specifier: ^0.1.0
