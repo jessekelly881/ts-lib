@@ -22,7 +22,8 @@
     "ci": "pnpm run lint && pnpm run test && pnpm run build",
     "publish": "changeset publish",
     "docs": "docgen",
-    "gen": "plop"
+    "gen": "plop",
+    "dtslint": "dtslint dtslint"
   },
   "author": "Jesse Kelly",
   "license": "MIT",
@@ -43,5 +44,8 @@
     "tsup": "^8.0.1",
     "typescript": "^5.2.2",
     "vitest": "^1.0.1"
+  },
+  "dependencies": {
+    "@effect/dtslint": "^0.0.4"
   }
 }
