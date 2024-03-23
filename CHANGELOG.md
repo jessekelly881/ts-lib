@@ -1,5 +1,11 @@
 # @kellyjesse881/empty
 
+## 0.0.5
+
+### Patch Changes
+
+- c7a6690: update
+
 ## 0.0.4
 
 ### Patch Changes
