@@ -9,8 +9,12 @@
 	"module": "./dist/index.mjs",
 	"types": "./dist/index.d.ts",
 	"homepage": "",
-	"tags": ["typescript"],
-	"keywords": ["typescript"],
+	"tags": [
+		"typescript"
+	],
+	"keywords": [
+		"typescript"
+	],
 	"scripts": {
 		"build": "tsup src/**/*.ts --format cjs,esm --dts",
 		"lint": "npx @biomejs/biome lint ./src",
@@ -22,7 +26,8 @@
 		"gen": "plop",
 		"dtslint": "dtslint dtslint",
 		"circular": "madge --extensions ts --circular --no-color --no-spinner src",
-		"check": "tsc -b tsconfig.json"
+		"check": "tsc -b tsconfig.json",
+		"prepare": "husky"
 	},
 	"author": "Jesse Kelly",
 	"license": "MIT",
