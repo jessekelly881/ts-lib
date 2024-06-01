@@ -1,4 +1,3 @@
 #!/usr/bin/env sh
 
-bunx @biomejs/biome check --staged
-
+bunx @biomejs/biome check --staged --no-errors-on-unmatched
