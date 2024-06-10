@@ -32,7 +32,7 @@
 	"author": "Jesse Kelly",
 	"license": "MIT",
 	"devDependencies": {
-		"@biomejs/biome": "1.7.3",
+		"@biomejs/biome": "1.8.1",
 		"@changesets/cli": "^2.26.0",
 		"@effect/docgen": "^0.4.3",
 		"@eslint/js": "^9.0.0",
