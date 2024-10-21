@@ -1,6 +1,6 @@
 export default function (
 	/** @type {import('plop').NodePlopAPI} */
-	plop
+	plop,
 ) {
 	plop.setGenerator("empty", {
 		description: "Creates a new empty file",
@@ -8,19 +8,19 @@ export default function (
 			{
 				type: "input",
 				name: "destpath",
-				default: "src"
+				default: "src",
 			},
 			{
 				type: "input",
-				name: "name"
-			}
+				name: "name",
+			},
 		],
 		actions: [
 			{
 				type: "add",
 				path: "{{ destpath }}/{{ name }}.ts",
-				templateFile: ".templates/file.hbs"
-			}
-		]
+				templateFile: ".templates/file.hbs",
+			},
+		],
 	});
 }

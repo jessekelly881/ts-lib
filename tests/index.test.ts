@@ -1,8 +1,7 @@
-import { fc, test } from "@fast-check/vitest";
+import { it } from "@effect/vitest";
+import { Schema } from "effect";
 import { describe } from "vitest";
 
 describe("tests", () => {
-	test.prop([fc.integer(), fc.integer()])("add", (a, b) => {
-		return a + b === b + a;
-	});
+	it.prop("add", [Schema.Int, Schema.Int], ([a, b]) => a + b === b + a);
 });

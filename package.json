@@ -9,12 +9,8 @@
 	"module": "./dist/index.mjs",
 	"types": "./dist/index.d.ts",
 	"homepage": "",
-	"tags": [
-		"typescript"
-	],
-	"keywords": [
-		"typescript"
-	],
+	"tags": ["typescript"],
+	"keywords": ["typescript"],
 	"scripts": {
 		"build": "tsup src/**/*.ts --format cjs,esm --dts",
 		"lint": "npx @biomejs/biome lint ./src",
@@ -35,6 +31,8 @@
 		"@biomejs/biome": "1.9.3",
 		"@changesets/cli": "^2.26.0",
 		"@effect/docgen": "^0.4.3",
+		"@effect/dtslint": "^0.1.1",
+		"@effect/vitest": "^0.13.0",
 		"@eslint/js": "^9.0.0",
 		"@fast-check/vitest": "^0.1.0",
 		"@types/node": "^22.1.0",
@@ -56,6 +54,6 @@
 		"vitest": "^2.0.1"
 	},
 	"dependencies": {
-		"@effect/dtslint": "^0.1.0"
+		"effect": "^3.10.0"
 	}
 }
