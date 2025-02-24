@@ -32,7 +32,7 @@
 		"@changesets/cli": "^2.26.0",
 		"@effect/docgen": "^0.5.0",
 		"@effect/dtslint": "^0.1.1",
-		"@effect/vitest": "^0.16.0",
+		"@effect/vitest": "^0.19.0",
 		"@eslint/js": "^9.0.0",
 		"@fast-check/vitest": "^0.1.0",
 		"@types/node": "^22.1.0",
@@ -42,7 +42,7 @@
 		"eslint": "^9.0.0",
 		"eslint-plugin-deprecation": "^3.0.0",
 		"fast-check": "^3.14.0",
-		"globals": "^15.0.0",
+		"globals": "^16.0.0",
 		"husky": "^9.0.7",
 		"jsdom": "^26.0.0",
 		"madge": "^8.0.0",
@@ -51,7 +51,7 @@
 		"typescript": "^5.2.2",
 		"typescript-eslint": "^8.0.1",
 		"vite": "^6.0.2",
-		"vitest": "^2.0.1"
+		"vitest": "^3.0.7"
 	},
 	"dependencies": {
 		"effect": "^3.10.0"
