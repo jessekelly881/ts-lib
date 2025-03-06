@@ -9,8 +9,12 @@
 	"module": "./dist/index.mjs",
 	"types": "./dist/index.d.ts",
 	"homepage": "",
-	"tags": ["typescript"],
-	"keywords": ["typescript"],
+	"tags": [
+		"typescript"
+	],
+	"keywords": [
+		"typescript"
+	],
 	"scripts": {
 		"build": "tsup src/**/*.ts --format cjs,esm --dts",
 		"lint": "npx @biomejs/biome lint ./src",
@@ -54,6 +58,7 @@
 		"vitest": "^3.0.7"
 	},
 	"dependencies": {
+		"@effect/language-service": "^0.4.0",
 		"effect": "^3.10.0"
 	}
 }
