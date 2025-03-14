@@ -1,4 +1,1 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
-pnpm install
+git diff --quiet ORIG_HEAD HEAD -- pnpm-lock.yaml || pnpm install
