@@ -41,7 +41,7 @@
 		"bun": "^1.0.7",
 		"eslint": "^9.0.0",
 		"eslint-plugin-deprecation": "^3.0.0",
-		"fast-check": "^3.14.0",
+		"fast-check": "^4.0.0",
 		"globals": "^16.0.0",
 		"husky": "^9.0.7",
 		"jsdom": "^26.0.0",
