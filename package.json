@@ -32,16 +32,16 @@
 		"@changesets/cli": "^2.26.0",
 		"@effect/docgen": "^0.5.0",
 		"@effect/dtslint": "^0.1.1",
-		"@effect/vitest": "^0.19.0",
+		"@effect/vitest": "^0.20.8",
 		"@eslint/js": "^9.0.0",
-		"@fast-check/vitest": "^0.1.0",
+		"@fast-check/vitest": "^0.2.1",
 		"@types/node": "^22.1.0",
 		"@typescript-eslint/eslint-plugin": "^8.0.1",
 		"@typescript-eslint/parser": "^8.0.1",
 		"bun": "^1.0.7",
 		"eslint": "^9.0.0",
 		"eslint-plugin-deprecation": "^3.0.0",
-		"fast-check": "^3.14.0",
+		"fast-check": "^4.1.1",
 		"globals": "^16.0.0",
 		"husky": "^9.0.7",
 		"jsdom": "^26.0.0",
@@ -54,7 +54,7 @@
 		"vitest": "^3.0.7"
 	},
 	"dependencies": {
-		"@effect/language-service": "^0.4.0",
+		"@effect/language-service": "^0.6.1",
 		"effect": "^3.10.0"
 	}
 }
