@@ -16,7 +16,7 @@ jobs:
         runs-on: ubuntu-latest
         timeout-minutes: 10
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v5
             - name: Install dependencies
               uses: ./.github/actions/setup
             - run: pnpm build
@@ -26,7 +26,7 @@ jobs:
         runs-on: ubuntu-latest
         timeout-minutes: 5
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v5
             - name: Install dependencies
               uses: ./.github/actions/setup
             - run: pnpm dtslint
@@ -37,7 +37,7 @@ jobs:
         runs-on: ubuntu-latest
         timeout-minutes: 5
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v5
             - name: Install dependencies
               uses: ./.github/actions/setup
             - run: pnpm lint
@@ -52,7 +52,7 @@ jobs:
             matrix:
                 runtime: [Node, Bun]
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v5
             - name: Install dependencies
               uses: ./.github/actions/setup
             - uses: oven-sh/setup-bun@v2
@@ -82,7 +82,7 @@ jobs:
 
         steps:
             - name: Checkout repository
-              uses: actions/checkout@v4
+              uses: actions/checkout@v5
             - name: Initialize CodeQL
               uses: github/codeql-action/init@v3
               with:
