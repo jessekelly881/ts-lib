@@ -28,11 +28,11 @@
 	"author": "Jesse Kelly",
 	"license": "MIT",
 	"devDependencies": {
-		"@biomejs/biome": "2.1.2",
+		"@biomejs/biome": "2.3.1",
 		"@changesets/cli": "^2.26.0",
 		"@effect/docgen": "^0.5.0",
 		"@effect/dtslint": "^0.1.1",
-		"@effect/vitest": "^0.24.0",
+		"@effect/vitest": "^0.26.0",
 		"@eslint/js": "^9.0.0",
 		"@fast-check/vitest": "^0.2.1",
 		"@types/node": "^24.0.13",
@@ -44,17 +44,17 @@
 		"fast-check": "^4.1.1",
 		"globals": "^16.0.0",
 		"husky": "^9.0.7",
-		"jsdom": "^26.0.0",
+		"jsdom": "^27.0.1",
 		"madge": "^8.0.0",
 		"plop": "^4.0.0",
 		"tsup": "^8.0.1",
 		"typescript": "^5.2.2",
 		"typescript-eslint": "^8.0.1",
 		"vite": "^7.0.4",
-		"vitest": "^3.0.7"
+		"vitest": "^4.0.4"
 	},
 	"dependencies": {
-		"@effect/language-service": "^0.28.0",
+		"@effect/language-service": "^0.48.0",
 		"effect": "^3.10.0"
 	}
 }
