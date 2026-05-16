@@ -3,13 +3,15 @@ import type { Reporter, TestRunEndReason } from "vitest/node"
 import simpleGit from "simple-git"
 import { Effect } from "effect"
 
+Effect.async((r, a) => 1)
+
 const git = simpleGit()
 
 const currentBranch = await git.revparse(["--abbrev-ref", "HEAD"])
 const tempBranchName = `${currentBranch}-${Date.now()}`
 
-git.branch([tempBranchName])
 git.checkoutBranch(tempBranchName, currentBranch)
+console.log(await git.revparse(["--abbrev-ref", "HEAD"]))
 
 const reporter: Reporter = {
     onTestRunStart() {
