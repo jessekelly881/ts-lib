@@ -1,21 +1,29 @@
 import { testResultsStream } from "./vitest"
 import { Effect, Stream, Option } from "effect"
 import { Backing } from "./backing"
-import { gitBacking } from "./git"
+import { Console } from "effect"
 
-Effect.gen(function*() {
+export const runner = Effect.gen(function*() {
     const backing = yield* Backing
     yield* testResultsStream.pipe(
         Stream.zipWithPrevious,
         Stream.runForEach(([prevOption, state]) => Effect.gen(function*() {
+            yield* Console.clear
             const shouldSave = Option.isSome(prevOption) && prevOption.value === "failed" && state === "passed"
+
             if (shouldSave) {
-                yield* Effect.log("Tests now passing. Saving")
+                yield* Console.log("✓ SAVED")
                 yield* backing.save 
             }
+
+            if (state === "passed") {
+                yield* Console.log("✓ PASSING")
+            }
+
+            if (state === "failed") {
+                yield* Console.log("❌ FAILED")
+            }
+
         }))
     )
-}).pipe(
-    Effect.provide(gitBacking({})),
-    Effect.runPromise
-)
+})
