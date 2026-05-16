@@ -9,13 +9,17 @@
 	"module": "./dist/index.mjs",
 	"types": "./dist/index.d.ts",
 	"homepage": "",
-	"tags": ["typescript"],
-	"keywords": ["typescript"],
+	"tags": [
+		"typescript"
+	],
+	"keywords": [
+		"typescript"
+	],
 	"scripts": {
 		"build": "tsup src/**/*.ts --format cjs,esm --dts",
 		"lint": "npx @biomejs/biome lint ./src",
 		"dev": "vitest --bail 1 --reporter=dot",
-		"test": "vitest run --bail 1 --reporter=basic",
+		"test": "vitest run",
 		"ci": "pnpm run lint && pnpm run test && pnpm run build",
 		"publish": "changeset publish",
 		"docs": "docgen",
@@ -55,6 +59,8 @@
 	},
 	"dependencies": {
 		"@effect/language-service": "^0.56.0",
-		"effect": "^3.10.0"
+		"effect": "^3.10.0",
+		"nanoid": "^5.1.11",
+		"simple-git": "^3.36.0"
 	}
 }

@@ -6,7 +6,6 @@ import { defineConfig } from "vite";
 
 export default defineConfig(async () => ({
 	test: {
-		environment: "jsdom",
 		fileParallelism: false,
 	},
 	resolve: {
