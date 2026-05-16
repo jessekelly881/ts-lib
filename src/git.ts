@@ -16,7 +16,7 @@ const defaultConfig: Required<GitBackingConfig> = {
 
 export type GitBacking = Layer.Layer<Backing, never, never>;
 
-export const gitBacking = (userConfig: GitBackingConfig): GitBacking => Layer.scoped(Backing, Effect.gen(function*() {
+export const gitBacking = (userConfig: GitBackingConfig): GitBacking => Layer.effect(Backing, Effect.gen(function*() {
     const config = { ...defaultConfig, ...userConfig }
 
     const git = simpleGit()
