@@ -12,16 +12,16 @@ export const runner = Effect.gen(function*() {
             const shouldSave = Option.isSome(prevOption) && prevOption.value === "failed" && state === "passed"
 
             if (shouldSave) {
-                yield* Console.log("✓ SAVED")
+                yield* Console.log("✓ \e[42m SAVED")
                 yield* backing.save 
             }
 
             if (state === "passed") {
-                yield* Console.log("✓ PASSING")
+                yield* Console.log("✓ \e[42m PASSING")
             }
 
             if (state === "failed") {
-                yield* Console.log("❌ FAILED")
+                yield* Console.log("❌ \e[41m FAILING")
             }
 
         }))
