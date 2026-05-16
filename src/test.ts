@@ -1,15 +1,15 @@
 import { startVitest } from "vitest/node"
 import type { Reporter, TestRunEndReason } from "vitest/node"
 import simpleGit from "simple-git"
-import { nanoid } from 'nanoid'
 import { Effect } from "effect"
 
 const git = simpleGit()
 
 const currentBranch = await git.revparse(["--abbrev-ref", "HEAD"])
-const tempBranchName = `${currentBranch}-${nanoid(6)}`
+const tempBranchName = `${currentBranch}-${Date.now()}`
 
-git.branch([tempBranchName]).checkout()
+git.branch([tempBranchName])
+git.checkoutBranch(tempBranchName, currentBranch)
 
 const reporter: Reporter = {
     onTestRunStart() {

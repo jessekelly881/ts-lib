@@ -60,7 +60,6 @@
 	"dependencies": {
 		"@effect/language-service": "^0.56.0",
 		"effect": "^3.10.0",
-		"nanoid": "^5.1.11",
 		"simple-git": "^3.36.0"
 	}
 }
