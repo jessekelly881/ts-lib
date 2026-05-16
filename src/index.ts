@@ -10,6 +10,7 @@ Effect.gen(function*() {
         Stream.runForEach(([prevOption, state]) => Effect.gen(function*() {
             const shouldSave = Option.isSome(prevOption) && prevOption.value === "failed" && state === "passed"
             if (shouldSave) {
+                yield* Effect.log("Tests now passing. Saving")
                 yield* backing.save 
             }
         }))
