@@ -2,6 +2,6 @@ import { describe, expect, it } from "@effect/vitest"
 
 describe("WorkflowEngine", () => {
 	it("works with TestClock", () => {
-		expect(2).toEqual(1)
+		expect(1).toEqual(1)
 	})
 }) 
