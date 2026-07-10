@@ -8,6 +8,14 @@ export type Expr<A = unknown> = (
     | { _tag: "Ref"; name: string; path: readonly string[] }
     | { _tag: "Literal"; value: Primitive }
     | { _tag: "Eq"; left: Expr; right: Expr }
+    | { _tag: "Neq"; left: Expr; right: Expr }
+    | { _tag: "Lt"; left: Expr; right: Expr }
+    | { _tag: "Lte"; left: Expr; right: Expr }
+    | { _tag: "Gt"; left: Expr; right: Expr }
+    | { _tag: "Gte"; left: Expr; right: Expr }
+    | { _tag: "Contains"; self: Expr; search: Expr }
+    | { _tag: "StartsWith"; self: Expr; prefix: Expr }
+    | { _tag: "EndsWith"; self: Expr; suffix: Expr }
     | { _tag: "Not"; expr: Expr }
     | { _tag: "And"; left: Expr; right: Expr }
     | { _tag: "Or"; left: Expr; right: Expr }
@@ -171,14 +179,102 @@ export const ref = (path: string): Expr => {
     };
 };
 
-export const eq = <Left extends ExprInput, Right extends ExprInput>(
+const binaryValue = <
+    Tag extends "Eq" | "Neq" | "Lt" | "Lte" | "Gt" | "Gte",
+    Left extends ExprInput,
+    Right extends ExprInput,
+>(
+    tag: Tag,
     left: Left,
     right: Right,
 ): Expr<Simplify<EnvOfInput<Left> & EnvOfInput<Right>>> => ({
-    _tag: "Eq",
+    _tag: tag,
     left: expr(left),
     right: expr(right),
 });
+
+export const eq = <Left extends ExprInput, Right extends ExprInput>(
+    left: Left,
+    right: Right,
+): Expr<Simplify<EnvOfInput<Left> & EnvOfInput<Right>>> => binaryValue("Eq", left, right);
+
+export const neq = <Left extends ExprInput, Right extends ExprInput>(
+    left: Left,
+    right: Right,
+): Expr<Simplify<EnvOfInput<Left> & EnvOfInput<Right>>> => binaryValue("Neq", left, right);
+
+export const lt = <Left extends ExprInput, Right extends ExprInput>(
+    left: Left,
+    right: Right,
+): Expr<Simplify<EnvOfInput<Left> & EnvOfInput<Right>>> => binaryValue("Lt", left, right);
+
+export const lte = <Left extends ExprInput, Right extends ExprInput>(
+    left: Left,
+    right: Right,
+): Expr<Simplify<EnvOfInput<Left> & EnvOfInput<Right>>> => binaryValue("Lte", left, right);
+
+export const gt = <Left extends ExprInput, Right extends ExprInput>(
+    left: Left,
+    right: Right,
+): Expr<Simplify<EnvOfInput<Left> & EnvOfInput<Right>>> => binaryValue("Gt", left, right);
+
+export const gte = <Left extends ExprInput, Right extends ExprInput>(
+    left: Left,
+    right: Right,
+): Expr<Simplify<EnvOfInput<Left> & EnvOfInput<Right>>> => binaryValue("Gte", left, right);
+
+export const between = <Value extends ExprInput, Min extends ExprInput, Max extends ExprInput>(
+    value: Value,
+    min: Min,
+    max: Max,
+): Expr<Simplify<EnvOfInput<Value> & EnvOfInput<Min> & EnvOfInput<Max>>> =>
+    and(gte(value, min), lte(value, max)) as Expr<
+        Simplify<EnvOfInput<Value> & EnvOfInput<Min> & EnvOfInput<Max>>
+    >;
+
+const binaryString = <
+    Tag extends "Contains" | "StartsWith" | "EndsWith",
+    Self extends ExprInput,
+    Search extends ExprInput,
+>(
+    tag: Tag,
+    self: Self,
+    search: Search,
+): Expr<Simplify<EnvOfInput<Self> & EnvOfInput<Search>>> => ({
+    _tag: tag,
+    self: expr(self),
+    ...(tag === "Contains"
+        ? { search: expr(search) }
+        : tag === "StartsWith"
+          ? { prefix: expr(search) }
+          : { suffix: expr(search) }),
+} as Expr<Simplify<EnvOfInput<Self> & EnvOfInput<Search>>>);
+
+export const contains = <Self extends ExprInput, Search extends ExprInput>(
+    self: Self,
+    search: Search,
+): Expr<Simplify<EnvOfInput<Self> & EnvOfInput<Search>>> => binaryString("Contains", self, search);
+
+export const startsWith = <Self extends ExprInput, Prefix extends ExprInput>(
+    self: Self,
+    prefix: Prefix,
+): Expr<Simplify<EnvOfInput<Self> & EnvOfInput<Prefix>>> => binaryString("StartsWith", self, prefix);
+
+export const endsWith = <Self extends ExprInput, Suffix extends ExprInput>(
+    self: Self,
+    suffix: Suffix,
+): Expr<Simplify<EnvOfInput<Self> & EnvOfInput<Suffix>>> => binaryString("EndsWith", self, suffix);
+
+export const oneOf = <Value extends ExprInput, Values extends readonly [Primitive, ...Primitive[]]>(
+    value: Value,
+    values: Values,
+): Expr<Simplify<EnvOfInput<Value>>> =>
+    or(...values.map((item) => eq(value, lit(item)))) as Expr<Simplify<EnvOfInput<Value>>>;
+
+export const notOneOf = <Value extends ExprInput, Values extends readonly [Primitive, ...Primitive[]]>(
+    value: Value,
+    values: Values,
+): Expr<Simplify<EnvOfInput<Value>>> => not(oneOf(value, values));
 
 export const not = <Self extends ExprInput>(self: Self): Expr<Simplify<EnvOfInput<Self>>> => ({
     _tag: "Not",

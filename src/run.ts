@@ -22,6 +22,30 @@ export const evaluate = (expr: Expr, env: Env): Primitive => {
         case "Eq":
             return evaluate(expr.left, env) === evaluate(expr.right, env);
 
+        case "Neq":
+            return evaluate(expr.left, env) !== evaluate(expr.right, env);
+
+        case "Lt":
+            return Number(evaluate(expr.left, env)) < Number(evaluate(expr.right, env));
+
+        case "Lte":
+            return Number(evaluate(expr.left, env)) <= Number(evaluate(expr.right, env));
+
+        case "Gt":
+            return Number(evaluate(expr.left, env)) > Number(evaluate(expr.right, env));
+
+        case "Gte":
+            return Number(evaluate(expr.left, env)) >= Number(evaluate(expr.right, env));
+
+        case "Contains":
+            return String(evaluate(expr.self, env)).includes(String(evaluate(expr.search, env)));
+
+        case "StartsWith":
+            return String(evaluate(expr.self, env)).startsWith(String(evaluate(expr.prefix, env)));
+
+        case "EndsWith":
+            return String(evaluate(expr.self, env)).endsWith(String(evaluate(expr.suffix, env)));
+
         case "Not":
             return !Boolean(evaluate(expr.expr, env));
 

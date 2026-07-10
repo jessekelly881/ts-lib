@@ -198,6 +198,14 @@ export const createZ3Compiler = async (sorts: Z3Sorts) => {
             }
 
             case "Eq":
+            case "Neq":
+            case "Lt":
+            case "Lte":
+            case "Gt":
+            case "Gte":
+            case "Contains":
+            case "StartsWith":
+            case "EndsWith":
             case "Not":
             case "And":
             case "Or":
@@ -220,6 +228,14 @@ export const createZ3Compiler = async (sorts: Z3Sorts) => {
                 return compileLiteral(expr.value, expectedSort);
 
             case "Eq":
+            case "Neq":
+            case "Lt":
+            case "Lte":
+            case "Gt":
+            case "Gte":
+            case "Contains":
+            case "StartsWith":
+            case "EndsWith":
             case "Not":
             case "And":
             case "Or":
@@ -258,6 +274,45 @@ export const createZ3Compiler = async (sorts: Z3Sorts) => {
         return left.eq(right);
     };
 
+    const compileNumberComparison = (
+        expr: Extract<Expr, { _tag: "Lt" | "Lte" | "Gt" | "Gte" }>,
+    ): Z3Boolean => {
+        const left = compileValue(expr.left, "number");
+        const right = compileValue(expr.right, "number");
+
+        switch (expr._tag) {
+            case "Lt":
+                return left.lt(right);
+            case "Lte":
+                return left.le(right);
+            case "Gt":
+                return left.gt(right);
+            case "Gte":
+                return left.ge(right);
+        }
+    };
+
+    const compileStringPredicate = (
+        expr: Extract<Expr, { _tag: "Contains" | "StartsWith" | "EndsWith" }>,
+    ): Z3Boolean => {
+        switch (expr._tag) {
+            case "Contains":
+                return compileValue(expr.self, "string").contains(
+                    compileValue(expr.search, "string"),
+                );
+
+            case "StartsWith":
+                return compileValue(expr.prefix, "string").prefixOf(
+                    compileValue(expr.self, "string"),
+                );
+
+            case "EndsWith":
+                return compileValue(expr.suffix, "string").suffixOf(
+                    compileValue(expr.self, "string"),
+                );
+        }
+    };
+
     const compileBoolean = (expr: Expr): Z3Boolean => {
         switch (expr._tag) {
             case "Literal": {
@@ -282,6 +337,24 @@ export const createZ3Compiler = async (sorts: Z3Sorts) => {
 
             case "Eq":
                 return compileEquality(expr);
+
+            case "Neq":
+                return context.Not(compileEquality({
+                    _tag: "Eq",
+                    left: expr.left,
+                    right: expr.right,
+                }));
+
+            case "Lt":
+            case "Lte":
+            case "Gt":
+            case "Gte":
+                return compileNumberComparison(expr);
+
+            case "Contains":
+            case "StartsWith":
+            case "EndsWith":
+                return compileStringPredicate(expr);
 
             case "Not":
                 return context.Not(compileBoolean(expr.expr));
