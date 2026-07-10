@@ -1,5 +1,6 @@
 import { Schema } from "effect";
 import {
+    add,
     and,
     between,
     concat,
@@ -64,7 +65,7 @@ const userIsActiveExpr = nor(
 
 const userIsEligibleEmployeeExpr = and(
     userIsActiveExpr,
-    between(ObjUser.age, lit(18), lit(120)),
+    between(add(ObjUser.age, lit(0)), lit(18), lit(120)),
     endsWith(ObjUser.email, lit("@example.com")),
 );
 

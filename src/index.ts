@@ -19,6 +19,10 @@ export type Expr<A = unknown> = (
     | { _tag: "StringLength"; self: Expr }
     | { _tag: "Concat"; left: Expr; right: Expr }
     | { _tag: "Substring"; self: Expr; offset: Expr; length: Expr }
+    | { _tag: "Add"; left: Expr; right: Expr }
+    | { _tag: "Sub"; left: Expr; right: Expr }
+    | { _tag: "Mul"; left: Expr; right: Expr }
+    | { _tag: "Div"; left: Expr; right: Expr }
     | { _tag: "Not"; expr: Expr }
     | { _tag: "And"; left: Expr; right: Expr }
     | { _tag: "Or"; left: Expr; right: Expr }
@@ -303,6 +307,40 @@ export const substring = <Self extends ExprInput, Offset extends ExprInput, Leng
     offset: expr(offset),
     length: expr(length),
 });
+
+const binaryNumber = <
+    Tag extends "Add" | "Sub" | "Mul" | "Div",
+    Left extends ExprInput,
+    Right extends ExprInput,
+>(
+    tag: Tag,
+    left: Left,
+    right: Right,
+): Expr<Simplify<EnvOfInput<Left> & EnvOfInput<Right>>> => ({
+    _tag: tag,
+    left: expr(left),
+    right: expr(right),
+});
+
+export const add = <Left extends ExprInput, Right extends ExprInput>(
+    left: Left,
+    right: Right,
+): Expr<Simplify<EnvOfInput<Left> & EnvOfInput<Right>>> => binaryNumber("Add", left, right);
+
+export const sub = <Left extends ExprInput, Right extends ExprInput>(
+    left: Left,
+    right: Right,
+): Expr<Simplify<EnvOfInput<Left> & EnvOfInput<Right>>> => binaryNumber("Sub", left, right);
+
+export const mul = <Left extends ExprInput, Right extends ExprInput>(
+    left: Left,
+    right: Right,
+): Expr<Simplify<EnvOfInput<Left> & EnvOfInput<Right>>> => binaryNumber("Mul", left, right);
+
+export const div = <Left extends ExprInput, Right extends ExprInput>(
+    left: Left,
+    right: Right,
+): Expr<Simplify<EnvOfInput<Left> & EnvOfInput<Right>>> => binaryNumber("Div", left, right);
 
 export const not = <Self extends ExprInput>(self: Self): Expr<Simplify<EnvOfInput<Self>>> => ({
     _tag: "Not",

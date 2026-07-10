@@ -220,6 +220,12 @@ export const createZ3Compiler = async (sorts: Z3Sorts) => {
             case "Concat":
             case "Substring":
                 return "string";
+
+            case "Add":
+            case "Sub":
+            case "Mul":
+            case "Div":
+                return "number";
         }
     };
 
@@ -273,6 +279,18 @@ export const createZ3Compiler = async (sorts: Z3Sorts) => {
                     compileStringIndex(expr.length),
                 );
             }
+
+            case "Add":
+                return compileValue(expr.left, "number").add(compileValue(expr.right, "number"));
+
+            case "Sub":
+                return compileValue(expr.left, "number").sub(compileValue(expr.right, "number"));
+
+            case "Mul":
+                return compileValue(expr.left, "number").mul(compileValue(expr.right, "number"));
+
+            case "Div":
+                return compileValue(expr.left, "number").div(compileValue(expr.right, "number"));
         }
     };
 

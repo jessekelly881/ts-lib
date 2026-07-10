@@ -1,10 +1,12 @@
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 import {
+    add,
     and,
     between,
     concat,
     contains,
+    div,
     endsWith,
     eq,
     eqv,
@@ -14,6 +16,7 @@ import {
     lit,
     lt,
     lte,
+    mul,
     nand,
     neq,
     nor,
@@ -22,6 +25,7 @@ import {
     oneOf,
     or,
     startsWith,
+    sub,
     stringLength,
     substring,
     xor,
@@ -54,6 +58,10 @@ const cases = [
     ["stringLength", eq(stringLength(lit("policy")), lit(6)), true],
     ["concat", eq(concat(lit("sec"), lit("urity")), lit("security")), true],
     ["substring", eq(substring(lit("security"), lit(0), lit(3)), lit("sec")), true],
+    ["add", eq(add(lit(2), lit(3)), lit(5)), true],
+    ["sub", eq(sub(lit(7), lit(2)), lit(5)), true],
+    ["mul", eq(mul(lit(4), lit(3)), lit(12)), true],
+    ["div", eq(div(lit(12), lit(3)), lit(4)), true],
 ] as const;
 
 const finiteNumber = fc.integer({ min: -100, max: 100 });

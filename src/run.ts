@@ -58,6 +58,18 @@ export const evaluate = (expr: Expr, env: Env): Primitive => {
                 Number(evaluate(expr.offset, env)) + Number(evaluate(expr.length, env)),
             );
 
+        case "Add":
+            return Number(evaluate(expr.left, env)) + Number(evaluate(expr.right, env));
+
+        case "Sub":
+            return Number(evaluate(expr.left, env)) - Number(evaluate(expr.right, env));
+
+        case "Mul":
+            return Number(evaluate(expr.left, env)) * Number(evaluate(expr.right, env));
+
+        case "Div":
+            return Number(evaluate(expr.left, env)) / Number(evaluate(expr.right, env));
+
         case "Not":
             return !Boolean(evaluate(expr.expr, env));
 
