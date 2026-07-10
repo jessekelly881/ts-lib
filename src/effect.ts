@@ -2,6 +2,7 @@ import { Schema as EffectSchema } from "effect";
 import {
     boolean,
     enum_,
+    int,
     number,
     object,
     string,
@@ -13,6 +14,37 @@ import {
 type EffectTop = EffectSchema.Top;
 
 type EffectAst = EffectTop["ast"];
+
+export type ModelSchemaType = "boolean" | "int" | "number" | "string";
+
+const annotationKey = "predicateDsl";
+
+export const modelType = (type: ModelSchemaType) =>
+    EffectSchema.annotate({
+        meta: {
+            [annotationKey]: { type },
+        },
+    } as never);
+
+const annotatedModelType = (ast: EffectAst): ModelSchemaType | undefined => {
+    const meta = ast.annotations?.meta;
+
+    if (typeof meta !== "object" || meta === null || !(annotationKey in meta)) {
+        return undefined;
+    }
+
+    const annotation = (meta as Record<string, unknown>)[annotationKey];
+
+    if (typeof annotation !== "object" || annotation === null || !("type" in annotation)) {
+        return undefined;
+    }
+
+    const type = (annotation as { readonly type: unknown }).type;
+
+    return type === "boolean" || type === "int" || type === "number" || type === "string"
+        ? type
+        : undefined;
+};
 
 type ModelRefs<Name extends string, Root, T> = {
     readonly [K in keyof T]: T[K] extends Record<string, unknown>
@@ -55,6 +87,21 @@ const enumValues = (ast: EffectAst): readonly [string, ...string[]] | undefined 
 };
 
 const fromAst = (ast: EffectAst): Schema => {
+    const modelType = annotatedModelType(ast);
+
+    if (modelType !== undefined) {
+        switch (modelType) {
+            case "boolean":
+                return boolean();
+            case "int":
+                return int();
+            case "number":
+                return number();
+            case "string":
+                return string();
+        }
+    }
+
     switch (ast._tag) {
         case "Declaration": {
             const [typeParameter] = ast.typeParameters;

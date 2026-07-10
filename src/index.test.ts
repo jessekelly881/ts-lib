@@ -188,6 +188,30 @@ describe("canAccessDocument", () => {
             lt(ObjUser.clearance, ObjDocument.sensitivity),
         );
 
-        expect(await z3.solver(counterexample).check()).toBe("unsat");
+        expect(await z3.findExample(counterexample)).toEqual({ status: "unsat" });
+    });
+
+    it("finds a concrete z3 example for allowed admin delete access", async () => {
+        const z3 = await createZ3Compiler(z3Sorts({
+            user: ObjUser,
+            document: ObjDocument,
+            request: ObjRequest,
+        }));
+
+        const example = await z3.findExample(and(
+            canAccessDocumentExpr,
+            eq(ObjRequest.action, lit("delete")),
+        ));
+
+        expect(example.status).toBe("sat");
+
+        if (example.status === "sat") {
+            expect(canAccessDocument(example.env as CanAccessDocumentEnv)).toBe(true);
+            expect(example.env).toMatchObject({
+                user: { role: "admin", suspended: false, account: { disabled: false, plan: "enterprise" } },
+                document: { status: "published", retentionHold: false },
+                request: { action: "delete", mfa: true },
+            });
+        }
     });
 });

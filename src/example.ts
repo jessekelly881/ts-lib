@@ -1,6 +1,5 @@
 import { Schema } from "effect";
 import {
-    add,
     and,
     between,
     concat,
@@ -17,7 +16,7 @@ import {
     startsWith,
     substring,
 } from "./index.js";
-import { fromEffectSchema } from "./effect.js";
+import { fromEffectSchema, modelType } from "./effect.js";
 import { toPredicate } from "./run.js";
 
 export class User extends Schema.Class<User>("User")({
@@ -25,8 +24,8 @@ export class User extends Schema.Class<User>("User")({
     role: Schema.Literals(["guest", "member", "admin", "auditor"]),
     orgId: Schema.String,
     suspended: Schema.Boolean,
-    age: Schema.Number,
-    clearance: Schema.Number,
+    age: Schema.Number.pipe(modelType("int")),
+    clearance: Schema.Number.pipe(modelType("int")),
     email: Schema.String,
     account: Schema.Struct({
         id: Schema.String,
@@ -44,7 +43,7 @@ export class Document extends Schema.Class<Document>("Document")({
     status: Schema.Literals(["draft", "published", "archived"]),
     locked: Schema.Boolean,
     retentionHold: Schema.Boolean,
-    sensitivity: Schema.Number,
+    sensitivity: Schema.Number.pipe(modelType("int")),
 }) {}
 
 export class Request extends Schema.Class<Request>("Request")({
@@ -65,7 +64,7 @@ const userIsActiveExpr = nor(
 
 const userIsEligibleEmployeeExpr = and(
     userIsActiveExpr,
-    between(add(ObjUser.age, lit(0)), lit(18), lit(120)),
+    between(ObjUser.age, lit(18), lit(120)),
     endsWith(ObjUser.email, lit("@example.com")),
 );
 

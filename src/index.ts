@@ -23,6 +23,7 @@ export type Expr<A = unknown> = (
     | { _tag: "Sub"; left: Expr; right: Expr }
     | { _tag: "Mul"; left: Expr; right: Expr }
     | { _tag: "Div"; left: Expr; right: Expr }
+    | { _tag: "Mod"; left: Expr; right: Expr }
     | { _tag: "Not"; expr: Expr }
     | { _tag: "And"; left: Expr; right: Expr }
     | { _tag: "Or"; left: Expr; right: Expr }
@@ -59,6 +60,7 @@ export type PrimitiveOf<T> = T extends string
 export type ScalarSchema =
     | { readonly _tag: "StringSchema" }
     | { readonly _tag: "NumberSchema" }
+    | { readonly _tag: "IntSchema" }
     | { readonly _tag: "BooleanSchema" }
     | { readonly _tag: "EnumSchema"; readonly values: readonly [string, ...string[]] };
 
@@ -79,7 +81,9 @@ export type InferSchema<S extends Schema> = S extends { readonly _tag: "StringSc
     ? string
     : S extends { readonly _tag: "NumberSchema" }
       ? number
-      : S extends { readonly _tag: "BooleanSchema" }
+      : S extends { readonly _tag: "IntSchema" }
+        ? number
+        : S extends { readonly _tag: "BooleanSchema" }
         ? boolean
         : S extends { readonly _tag: "EnumSchema"; readonly values: infer Values extends readonly string[] }
           ? Values[number]
@@ -90,6 +94,8 @@ export type InferSchema<S extends Schema> = S extends { readonly _tag: "StringSc
 export const string = (): ScalarSchema => ({ _tag: "StringSchema" });
 
 export const number = (): ScalarSchema => ({ _tag: "NumberSchema" });
+
+export const int = (): ScalarSchema => ({ _tag: "IntSchema" });
 
 export const boolean = (): ScalarSchema => ({ _tag: "BooleanSchema" });
 
@@ -309,7 +315,7 @@ export const substring = <Self extends ExprInput, Offset extends ExprInput, Leng
 });
 
 const binaryNumber = <
-    Tag extends "Add" | "Sub" | "Mul" | "Div",
+    Tag extends "Add" | "Sub" | "Mul" | "Div" | "Mod",
     Left extends ExprInput,
     Right extends ExprInput,
 >(
@@ -341,6 +347,11 @@ export const div = <Left extends ExprInput, Right extends ExprInput>(
     left: Left,
     right: Right,
 ): Expr<Simplify<EnvOfInput<Left> & EnvOfInput<Right>>> => binaryNumber("Div", left, right);
+
+export const mod = <Left extends ExprInput, Right extends ExprInput>(
+    left: Left,
+    right: Right,
+): Expr<Simplify<EnvOfInput<Left> & EnvOfInput<Right>>> => binaryNumber("Mod", left, right);
 
 export const not = <Self extends ExprInput>(self: Self): Expr<Simplify<EnvOfInput<Self>>> => ({
     _tag: "Not",

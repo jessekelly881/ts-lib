@@ -70,6 +70,9 @@ export const evaluate = (expr: Expr, env: Env): Primitive => {
         case "Div":
             return Number(evaluate(expr.left, env)) / Number(evaluate(expr.right, env));
 
+        case "Mod":
+            return Number(evaluate(expr.left, env)) % Number(evaluate(expr.right, env));
+
         case "Not":
             return !Boolean(evaluate(expr.expr, env));
 

@@ -1,7 +1,7 @@
 import { init } from "z3-solver";
 import type { Expr, Primitive, Schema } from "./index.js";
 
-export type Z3Sort = "boolean" | "string" | "number";
+export type Z3Sort = "boolean" | "string" | "number" | "int";
 
 /**
  * Keys correspond to the fully qualified paths produced by ref().
@@ -31,6 +31,8 @@ const scalarSort = (schema: Schema): Z3Sort | undefined => {
             return "string";
         case "NumberSchema":
             return "number";
+        case "IntSchema":
+            return "int";
         case "ObjectSchema":
             return undefined;
     }
@@ -65,6 +67,66 @@ export const z3Sorts = (
     }
 
     return output;
+};
+
+export type Z3Example =
+    | { readonly status: "unsat" | "unknown" }
+    | { readonly status: "sat"; readonly env: Record<string, unknown> };
+
+const setPath = (
+    output: Record<string, unknown>,
+    key: string,
+    value: unknown,
+): void => {
+    const [name, ...path] = key.split(".");
+
+    if (name === undefined || path.length === 0) {
+        return;
+    }
+
+    let current = output[name] as Record<string, unknown> | undefined;
+
+    if (current === undefined) {
+        current = {};
+        output[name] = current;
+    }
+
+    for (const segment of path.slice(0, -1)) {
+        const next = current[segment];
+
+        if (typeof next === "object" && next !== null) {
+            current = next as Record<string, unknown>;
+        } else {
+            const created: Record<string, unknown> = {};
+            current[segment] = created;
+            current = created;
+        }
+    }
+
+    current[path[path.length - 1] as string] = value;
+};
+
+const parseModelValue = (sort: Z3Sort, value: unknown): Primitive => {
+    const text = String(value);
+
+    switch (sort) {
+        case "boolean":
+            return text === "true";
+
+        case "string":
+            return text.startsWith('"') && text.endsWith('"')
+                ? JSON.parse(text)
+                : text;
+
+        case "int":
+        case "number":
+            if (text.includes("/")) {
+                const [numerator, denominator] = text.split("/").map(Number);
+                return numerator / denominator;
+            }
+
+            return Number(text);
+    }
 };
 
 export const createZ3Compiler = async (sorts: Z3Sorts) => {
@@ -109,6 +171,9 @@ export const createZ3Compiler = async (sorts: Z3Sorts) => {
             case "number":
                 // Real rather than Int allows both integral and decimal values.
                 return context.Real.const(symbol);
+
+            case "int":
+                return context.Int.const(symbol);
         }
     };
 
@@ -131,7 +196,7 @@ export const createZ3Compiler = async (sorts: Z3Sorts) => {
                     case "string":
                         return "string";
                     case "number":
-                        return "number";
+                        return expectedSort === "int" && Number.isInteger(value) ? "int" : "number";
                     default:
                         throw new Error(`Unsupported literal: ${String(value)}`);
                 }
@@ -169,6 +234,16 @@ export const createZ3Compiler = async (sorts: Z3Sorts) => {
                 // inside the Z3 binding.
                 return context.Real.val(String(value));
             }
+
+            case "int": {
+                if (typeof value !== "number" || !Number.isInteger(value)) {
+                    throw new TypeError(
+                        `Expected integer literal, received ${String(value)}`,
+                    );
+                }
+
+                return context.Int.val(value);
+            }
         }
     };
 
@@ -190,7 +265,7 @@ export const createZ3Compiler = async (sorts: Z3Sorts) => {
                         return "string";
 
                     case "number":
-                        return "number";
+                        return Number.isInteger(expr.value) ? "int" : "number";
 
                     default:
                         return undefined;
@@ -226,6 +301,9 @@ export const createZ3Compiler = async (sorts: Z3Sorts) => {
             case "Mul":
             case "Div":
                 return "number";
+
+            case "Mod":
+                return "int";
         }
     };
 
@@ -291,6 +369,9 @@ export const createZ3Compiler = async (sorts: Z3Sorts) => {
 
             case "Div":
                 return compileValue(expr.left, "number").div(compileValue(expr.right, "number"));
+
+            case "Mod":
+                return compileValue(expr.left, "int").mod(compileValue(expr.right, "int"));
         }
     };
 
@@ -300,17 +381,20 @@ export const createZ3Compiler = async (sorts: Z3Sorts) => {
         const leftSort = knownSort(expr.left);
         const rightSort = knownSort(expr.right);
 
+        const numericSorts = new Set<Z3Sort>(["number", "int"]);
+
         if (
             leftSort !== undefined &&
             rightSort !== undefined &&
-            leftSort !== rightSort
+            leftSort !== rightSort &&
+            !(numericSorts.has(leftSort) && numericSorts.has(rightSort))
         ) {
             throw new TypeError(
                 `Cannot compare Z3 values of different sorts: ${leftSort} and ${rightSort}`,
             );
         }
 
-        const sort = leftSort ?? rightSort;
+        const sort = leftSort === "int" && rightSort === "int" ? "int" : leftSort ?? rightSort;
 
         if (sort === undefined) {
             throw new Error("Could not determine the sort of equality operands");
@@ -325,8 +409,11 @@ export const createZ3Compiler = async (sorts: Z3Sorts) => {
     const compileNumberComparison = (
         expr: Extract<Expr, { _tag: "Lt" | "Lte" | "Gt" | "Gte" }>,
     ): Z3Boolean => {
-        const left = compileValue(expr.left, "number");
-        const right = compileValue(expr.right, "number");
+        const leftSort = knownSort(expr.left);
+        const rightSort = knownSort(expr.right);
+        const sort = leftSort === "int" && rightSort === "int" ? "int" : "number";
+        const left = compileValue(expr.left, sort);
+        const right = compileValue(expr.right, sort);
 
         switch (expr._tag) {
             case "Lt":
@@ -436,8 +523,20 @@ export const createZ3Compiler = async (sorts: Z3Sorts) => {
         }
     };
 
+    const valueForKey = (key: string): Z3Value => {
+        const [name, ...path] = key.split(".");
+
+        if (name === undefined || path.length === 0) {
+            throw new Error(`Expected a dotted reference key, received: ${key}`);
+        }
+
+        return compileRef({ _tag: "Ref", name, path });
+    };
+
     return {
         context,
+
+        valueForKey,
 
         compile(expr: Expr): Z3Boolean {
             return compileBoolean(expr);
@@ -447,6 +546,27 @@ export const createZ3Compiler = async (sorts: Z3Sorts) => {
             const solver = new context.Solver();
             solver.add(compileBoolean(expr));
             return solver;
+        },
+
+        async findExample(expr: Expr): Promise<Z3Example> {
+            const solver = new context.Solver();
+            solver.add(compileBoolean(expr));
+
+            const status = await solver.check();
+
+            if (status !== "sat") {
+                return { status };
+            }
+
+            const model = solver.model();
+            const env: Record<string, unknown> = {};
+
+            for (const [key, sort] of Object.entries(sorts)) {
+                const value = model.eval(valueForKey(key), true);
+                setPath(env, key, parseModelValue(sort, value));
+            }
+
+            return { status, env };
         },
     };
 }; 

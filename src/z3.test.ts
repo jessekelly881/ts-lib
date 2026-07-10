@@ -16,6 +16,7 @@ import {
     lit,
     lt,
     lte,
+    mod,
     mul,
     nand,
     neq,
@@ -28,6 +29,7 @@ import {
     sub,
     stringLength,
     substring,
+    ref,
     xor,
     type Expr,
     type Primitive,
@@ -62,6 +64,7 @@ const cases = [
     ["sub", eq(sub(lit(7), lit(2)), lit(5)), true],
     ["mul", eq(mul(lit(4), lit(3)), lit(12)), true],
     ["div", eq(div(lit(12), lit(3)), lit(4)), true],
+    ["mod", eq(mod(lit(13), lit(5)), lit(3)), true],
 ] as const;
 
 const finiteNumber = fc.integer({ min: -100, max: 100 });
@@ -74,6 +77,77 @@ const sameSortComparableLiterals = fc.oneof(
     fc.tuple(stringLiteral, stringLiteral),
     fc.tuple(booleanLiteral, booleanLiteral),
 );
+
+const userAge = ref("user.age") as Expr<TestEnv>;
+const userEmail = ref("user.email") as Expr<TestEnv>;
+const userSuspended = ref("user.suspended") as Expr<TestEnv>;
+const documentSensitivity = ref("document.sensitivity") as Expr<TestEnv>;
+const documentTitle = ref("document.title") as Expr<TestEnv>;
+const documentPublished = ref("document.published") as Expr<TestEnv>;
+
+const testSorts = {
+    "user.age": "int",
+    "user.email": "string",
+    "user.suspended": "boolean",
+    "document.sensitivity": "int",
+    "document.title": "string",
+    "document.published": "boolean",
+} as const;
+
+type TestEnv = {
+    readonly user: {
+        readonly age: number;
+        readonly email: string;
+        readonly suspended: boolean;
+    };
+    readonly document: {
+        readonly sensitivity: number;
+        readonly title: string;
+        readonly published: boolean;
+    };
+};
+
+const envArbitrary: fc.Arbitrary<TestEnv> = fc.record({
+    user: fc.record({
+        age: fc.integer({ min: 0, max: 120 }),
+        email: fc.oneof(
+            smallString.map((value) => `${value}@example.com`),
+            smallString.map((value) => `${value}@other.test`),
+        ),
+        suspended: fc.boolean(),
+    }),
+    document: fc.record({
+        sensitivity: fc.integer({ min: 0, max: 10 }),
+        title: smallString,
+        published: fc.boolean(),
+    }),
+});
+
+const envConstraints = (env: TestEnv): Expr => and(
+    eq(userAge, lit(env.user.age)),
+    eq(userEmail, lit(env.user.email)),
+    eq(userSuspended, lit(env.user.suspended)),
+    eq(documentSensitivity, lit(env.document.sensitivity)),
+    eq(documentTitle, lit(env.document.title)),
+    eq(documentPublished, lit(env.document.published)),
+);
+
+const refBooleanExpr = fc.letrec<{
+    expr: Expr<TestEnv>;
+}>((tie) => ({
+    expr: fc.oneof(
+        fc.boolean().map((value) => lit(value) as Expr<TestEnv>),
+        fc.tuple(fc.constant(userAge), fc.constant(documentSensitivity)).map(([left, right]) => gte(left, right)),
+        fc.tuple(fc.constant(userAge), fc.integer({ min: 0, max: 120 }).map(lit)).map(([left, right]) => between(left, lit(18), right)),
+        fc.tuple(fc.constant(userEmail), fc.constantFrom("@example.com", "@other.test").map(lit)).map(([left, right]) => endsWith(left, right)),
+        fc.tuple(fc.constant(documentTitle), smallString.map(lit)).map(([left, right]) => contains(left, right)),
+        fc.constant(documentPublished),
+        fc.constant(not(userSuspended)),
+        fc.tuple(tie("expr"), tie("expr")).map(([left, right]) => and(left, right)),
+        fc.tuple(tie("expr"), tie("expr")).map(([left, right]) => or(left, right)),
+        fc.tuple(tie("expr"), tie("expr")).map(([left, right]) => implies(left, right)),
+    ).map((expr) => expr as Expr<TestEnv>),
+})).expr;
 
 const booleanExpr = fc.letrec<{
     expr: Expr;
@@ -128,6 +202,20 @@ describe("z3-supported predicate combinators", () => {
             fc.asyncProperty(booleanExpr, async (expr) => {
                 const jsResult = toPredicate(expr)({});
                 const z3Result = await z3.solver(expr).check();
+
+                expect(z3Result).toBe(jsResult ? "sat" : "unsat");
+            }),
+            { numRuns: 100 },
+        );
+    });
+
+    it("property: Z3 agrees with toPredicate for ref expressions under a concrete env", async () => {
+        const z3 = await createZ3Compiler(testSorts);
+
+        await fc.assert(
+            fc.asyncProperty(refBooleanExpr, envArbitrary, async (expr, env) => {
+                const jsResult = toPredicate(expr)(env);
+                const z3Result = await z3.solver(and(envConstraints(env), expr)).check();
 
                 expect(z3Result).toBe(jsResult ? "sat" : "unsat");
             }),
