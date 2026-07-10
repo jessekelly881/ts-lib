@@ -2,6 +2,7 @@ import { Schema } from "effect";
 import {
     and,
     between,
+    concat,
     contains,
     endsWith,
     eq,
@@ -13,6 +14,7 @@ import {
     oneOf,
     or,
     startsWith,
+    substring,
 } from "./index.js";
 import { fromEffectSchema } from "./effect.js";
 import { toPredicate } from "./run.js";
@@ -76,7 +78,8 @@ const userCanSeeDocumentExpr = or(
     eq(ObjDocument.visibility, lit("org")),
     and(
         eq(ObjDocument.visibility, lit("public")),
-        startsWith(ObjDocument.slug, lit("docs/")),
+        startsWith(ObjDocument.slug, concat(lit("docs"), lit("/"))),
+        eq(substring(ObjDocument.slug, lit(0), lit(5)), lit("docs/")),
         between(ObjDocument.sensitivity, lit(0), lit(2)),
     ),
     and(

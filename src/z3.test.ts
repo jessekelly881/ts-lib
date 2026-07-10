@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
     and,
     between,
+    concat,
     contains,
     endsWith,
     eq,
@@ -21,6 +22,8 @@ import {
     oneOf,
     or,
     startsWith,
+    stringLength,
+    substring,
     xor,
     type Expr,
     type Primitive,
@@ -48,6 +51,9 @@ const cases = [
     ["endsWith", endsWith(lit("person@example.com"), lit("@example.com")), true],
     ["oneOf", oneOf(lit("published"), ["draft", "published"]), true],
     ["notOneOf", notOneOf(lit("archived"), ["draft", "published"]), true],
+    ["stringLength", eq(stringLength(lit("policy")), lit(6)), true],
+    ["concat", eq(concat(lit("sec"), lit("urity")), lit("security")), true],
+    ["substring", eq(substring(lit("security"), lit(0), lit(3)), lit("sec")), true],
 ] as const;
 
 const finiteNumber = fc.integer({ min: -100, max: 100 });

@@ -46,6 +46,18 @@ export const evaluate = (expr: Expr, env: Env): Primitive => {
         case "EndsWith":
             return String(evaluate(expr.self, env)).endsWith(String(evaluate(expr.suffix, env)));
 
+        case "StringLength":
+            return String(evaluate(expr.self, env)).length;
+
+        case "Concat":
+            return `${String(evaluate(expr.left, env))}${String(evaluate(expr.right, env))}`;
+
+        case "Substring":
+            return String(evaluate(expr.self, env)).slice(
+                Number(evaluate(expr.offset, env)),
+                Number(evaluate(expr.offset, env)) + Number(evaluate(expr.length, env)),
+            );
+
         case "Not":
             return !Boolean(evaluate(expr.expr, env));
 

@@ -213,6 +213,13 @@ export const createZ3Compiler = async (sorts: Z3Sorts) => {
             case "Eqv":
             case "Implies":
                 return "boolean";
+
+            case "StringLength":
+                return "number";
+
+            case "Concat":
+            case "Substring":
+                return "string";
         }
     };
 
@@ -243,6 +250,29 @@ export const createZ3Compiler = async (sorts: Z3Sorts) => {
             case "Eqv":
             case "Implies":
                 return compileBoolean(expr);
+
+            case "StringLength":
+                return compileValue(expr.self, "string").length();
+
+            case "Concat":
+                return compileValue(expr.left, "string").concat(
+                    compileValue(expr.right, "string"),
+                );
+
+            case "Substring": {
+                const compileStringIndex = (index: Expr): number => {
+                    if (index._tag !== "Literal" || typeof index.value !== "number" || !Number.isInteger(index.value)) {
+                        throw new TypeError("Z3 substring indexes must be integer literals for now");
+                    }
+
+                    return index.value;
+                };
+
+                return compileValue(expr.self, "string").extract(
+                    compileStringIndex(expr.offset),
+                    compileStringIndex(expr.length),
+                );
+            }
         }
     };
 

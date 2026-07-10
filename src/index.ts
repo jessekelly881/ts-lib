@@ -16,6 +16,9 @@ export type Expr<A = unknown> = (
     | { _tag: "Contains"; self: Expr; search: Expr }
     | { _tag: "StartsWith"; self: Expr; prefix: Expr }
     | { _tag: "EndsWith"; self: Expr; suffix: Expr }
+    | { _tag: "StringLength"; self: Expr }
+    | { _tag: "Concat"; left: Expr; right: Expr }
+    | { _tag: "Substring"; self: Expr; offset: Expr; length: Expr }
     | { _tag: "Not"; expr: Expr }
     | { _tag: "And"; left: Expr; right: Expr }
     | { _tag: "Or"; left: Expr; right: Expr }
@@ -275,6 +278,31 @@ export const notOneOf = <Value extends ExprInput, Values extends readonly [Primi
     value: Value,
     values: Values,
 ): Expr<Simplify<EnvOfInput<Value>>> => not(oneOf(value, values));
+
+export const stringLength = <Self extends ExprInput>(self: Self): Expr<Simplify<EnvOfInput<Self>>> => ({
+    _tag: "StringLength",
+    self: expr(self),
+});
+
+export const concat = <Left extends ExprInput, Right extends ExprInput>(
+    left: Left,
+    right: Right,
+): Expr<Simplify<EnvOfInput<Left> & EnvOfInput<Right>>> => ({
+    _tag: "Concat",
+    left: expr(left),
+    right: expr(right),
+});
+
+export const substring = <Self extends ExprInput, Offset extends ExprInput, Length extends ExprInput>(
+    self: Self,
+    offset: Offset,
+    length: Length,
+): Expr<Simplify<EnvOfInput<Self> & EnvOfInput<Offset> & EnvOfInput<Length>>> => ({
+    _tag: "Substring",
+    self: expr(self),
+    offset: expr(offset),
+    length: expr(length),
+});
 
 export const not = <Self extends ExprInput>(self: Self): Expr<Simplify<EnvOfInput<Self>>> => ({
     _tag: "Not",
