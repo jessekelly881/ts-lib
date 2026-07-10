@@ -1,4 +1,4 @@
-import type { Expr, Primitive } from "./index";
+import type { Expr, Primitive } from "./index.js";
 
 type Env = Record<string, unknown>;
 

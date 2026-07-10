@@ -1,5 +1,5 @@
 import { init } from "z3-solver";
-import type { Expr, Primitive, Schema } from "./index";
+import type { Expr, Primitive, Schema } from "./index.js";
 
 export type Z3Sort = "boolean" | "string" | "number";
 
