@@ -30,7 +30,10 @@ export const evaluate = (expr: Expr, env: Env): Primitive => {
     }
 };
 
-export const run =
+export const toPredicate =
     <A extends Env>(expr: Expr) =>
         (env: A): boolean =>
-            Boolean(evaluate(expr, env)); 
+            Boolean(evaluate(expr, env));
+
+export const run = toPredicate;
+
