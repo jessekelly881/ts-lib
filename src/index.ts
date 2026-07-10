@@ -2,12 +2,40 @@
 
 export type Primitive = string | number | boolean | null;
 
-export type Expr =
+declare const EnvTypeId: unique symbol;
+
+export type Expr<A = unknown> = (
     | { _tag: "Ref"; name: string; path: readonly string[] }
     | { _tag: "Literal"; value: Primitive }
     | { _tag: "Eq"; left: Expr; right: Expr }
     | { _tag: "And"; left: Expr; right: Expr }
-    | { _tag: "Or"; left: Expr; right: Expr };
+    | { _tag: "Or"; left: Expr; right: Expr }
+) & { readonly [EnvTypeId]?: A };
+
+export type Simplify<A> = { readonly [K in keyof A]: A[K] } & {};
+
+export type EnvOf<E> = E extends Expr<infer A> ? Simplify<A> : unknown;
+
+type ExprInput = Expr | Primitive;
+type EnvOfInput<I> = I extends Expr<infer A> ? A : unknown;
+type UnionToIntersection<U> = (U extends unknown ? (value: U) => void : never) extends (
+    value: infer I,
+) => void
+    ? I
+    : never;
+type EnvOfInputs<Items extends readonly ExprInput[]> = UnionToIntersection<
+    EnvOfInput<Items[number]>
+>;
+
+export type PrimitiveOf<T> = T extends string
+    ? string
+    : T extends number
+      ? number
+      : T extends boolean
+        ? boolean
+        : T extends null
+          ? null
+          : Primitive;
 
 export type ScalarSchema =
     | { readonly _tag: "StringSchema" }
@@ -22,10 +50,10 @@ export interface ObjectSchema<Fields extends Readonly<Record<string, Schema>> = 
 
 export type Schema = ScalarSchema | ObjectSchema;
 
-export type ObjectModel<Fields extends Readonly<Record<string, Schema>>> = ObjectSchema<Fields> & {
+export type ObjectModel<Fields extends Readonly<Record<string, Schema>>, A = unknown> = ObjectSchema<Fields> & {
     readonly [K in keyof Fields]: Fields[K] extends ObjectSchema<infer NestedFields>
-        ? ObjectModel<NestedFields>
-        : Expr;
+        ? ObjectModel<NestedFields, A>
+        : Expr<A>;
 };
 
 export type InferSchema<S extends Schema> = S extends { readonly _tag: "StringSchema" }
@@ -55,18 +83,18 @@ export const enum_ = <Values extends readonly [string, ...string[]]>(
 
 export { enum_ as enum };
 
-const refFromParts = (name: string, path: readonly string[]): Expr => ({
+const refFromParts = <A>(name: string, path: readonly string[]): Expr<A> => ({
     _tag: "Ref",
     name,
     path,
 });
 
-const attachRefs = <Fields extends Readonly<Record<string, Schema>>>(
+const attachRefs = <Fields extends Readonly<Record<string, Schema>>, A = unknown>(
     schema: ObjectSchema<Fields>,
     name: string,
     path: readonly string[] = [],
-): ObjectModel<Fields> => {
-    const model = schema as ObjectModel<Fields>;
+): ObjectModel<Fields, A> => {
+    const model = schema as ObjectModel<Fields, A>;
 
     for (const [key, field] of Object.entries(schema.fields)) {
         Object.defineProperty(model, key, {
@@ -108,7 +136,7 @@ export function object<Fields extends Readonly<Record<string, Schema>>>(
     return name === undefined ? schema : attachRefs(schema, name);
 }
 
-export const lit = (value: Primitive): Expr => ({
+export const lit = <A extends Primitive>(value: A): Expr<unknown> => ({
     _tag: "Literal",
     value,
 });
@@ -118,8 +146,8 @@ const isExpr = (value: unknown): value is Expr =>
     value !== null &&
     "_tag" in value;
 
-const expr = (value: Expr | Primitive): Expr =>
-    isExpr(value) ? value : lit(value);
+const expr = <A extends ExprInput>(value: A): Expr<EnvOfInput<A>> =>
+    (isExpr(value) ? value : lit(value)) as Expr<EnvOfInput<A>>;
 
 export const ref = (path: string): Expr => {
     const [name, ...rest] = path.split(".");
@@ -139,32 +167,35 @@ export const ref = (path: string): Expr => {
     };
 };
 
-export const eq = (left: Expr | Primitive, right: Expr | Primitive): Expr => ({
+export const eq = <Left extends ExprInput, Right extends ExprInput>(
+    left: Left,
+    right: Right,
+): Expr<Simplify<EnvOfInput<Left> & EnvOfInput<Right>>> => ({
     _tag: "Eq",
     left: expr(left),
     right: expr(right),
 });
 
-export const and = (...items: Expr[]): Expr => {
+export const and = <Items extends readonly ExprInput[]>(...items: Items): Expr<Simplify<EnvOfInputs<Items>>> => {
     if (items.length === 0) {
-        return lit(true);
+        return lit(true) as Expr<Simplify<EnvOfInputs<Items>>>;
     }
 
-    return items.reduce((left, right) => ({
+    return items.map(expr).reduce((left, right) => ({
         _tag: "And",
         left,
         right,
-    }));
+    })) as Expr<Simplify<EnvOfInputs<Items>>>;
 };
 
-export const or = (...items: Expr[]): Expr => {
+export const or = <Items extends readonly ExprInput[]>(...items: Items): Expr<Simplify<EnvOfInputs<Items>>> => {
     if (items.length === 0) {
-        return lit(false);
+        return lit(false) as Expr<Simplify<EnvOfInputs<Items>>>;
     }
 
-    return items.reduce((left, right) => ({
+    return items.map(expr).reduce((left, right) => ({
         _tag: "Or",
         left,
         right,
-    }));
+    })) as Expr<Simplify<EnvOfInputs<Items>>>;
 };

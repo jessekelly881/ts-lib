@@ -14,11 +14,14 @@ type EffectTop = EffectSchema.Top;
 
 type EffectAst = EffectTop["ast"];
 
-type ModelRefs<T> = {
-    readonly [K in keyof T]: T[K] extends Record<string, unknown> ? ModelRefs<T[K]> : Expr;
+type ModelRefs<Name extends string, Root, T> = {
+    readonly [K in keyof T]: T[K] extends Record<string, unknown>
+        ? ModelRefs<Name, Root, T[K]>
+        : Expr<{ readonly [K in Name]: Root }>;
 };
 
-export type EffectModel<S extends EffectTop> = ObjectSchema & ModelRefs<EffectSchema.Schema.Type<S>>;
+export type EffectModel<Name extends string, S extends EffectTop> = ObjectSchema &
+    ModelRefs<Name, EffectSchema.Schema.Type<S>, EffectSchema.Schema.Type<S>>;
 
 const unsupported = (ast: EffectAst): never => {
     throw new Error(`Unsupported Effect schema AST node: ${ast._tag}`);
@@ -53,6 +56,16 @@ const enumValues = (ast: EffectAst): readonly [string, ...string[]] | undefined 
 
 const fromAst = (ast: EffectAst): Schema => {
     switch (ast._tag) {
+        case "Declaration": {
+            const [typeParameter] = ast.typeParameters;
+
+            if (typeParameter === undefined) {
+                return unsupported(ast);
+            }
+
+            return fromAst(typeParameter);
+        }
+
         case "String":
             return string();
 
@@ -106,11 +119,11 @@ const fromAst = (ast: EffectAst): Schema => {
 };
 
 export function fromEffectSchema<S extends EffectTop>(schema: S): ObjectSchema;
-export function fromEffectSchema<S extends EffectTop>(name: string, schema: S): EffectModel<S>;
-export function fromEffectSchema<S extends EffectTop>(
-    nameOrSchema: string | S,
+export function fromEffectSchema<Name extends string, S extends EffectTop>(name: Name, schema: S): EffectModel<Name, S>;
+export function fromEffectSchema<Name extends string, S extends EffectTop>(
+    nameOrSchema: Name | S,
     maybeSchema?: S,
-): ObjectSchema | EffectModel<S> {
+): ObjectSchema | EffectModel<Name, S> {
     const name = typeof nameOrSchema === "string" ? nameOrSchema : undefined;
     const schema = typeof nameOrSchema === "string" ? maybeSchema : nameOrSchema;
 
@@ -124,5 +137,5 @@ export function fromEffectSchema<S extends EffectTop>(
         throw new Error("Expected an Effect object schema at the model root");
     }
 
-    return name === undefined ? model : object(name, model.fields) as EffectModel<S>;
+    return name === undefined ? model : object(name, model.fields) as EffectModel<Name, S>;
 }

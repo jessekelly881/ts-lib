@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { canAccessDocument } from "./example.js";
 
-const baseEnv = {
+type CanAccessDocumentEnv = Parameters<typeof canAccessDocument>[0];
+
+const baseEnv: CanAccessDocumentEnv = {
     user: {
         id: "user_1",
         role: "member",
@@ -27,7 +29,7 @@ const baseEnv = {
 };
 
 describe("canAccessDocument", () => {
-    it.each([
+    const cases: ReadonlyArray<readonly [string, CanAccessDocumentEnv, boolean]> = [
         ["allows the owner to read their published private document", baseEnv, true],
         [
             "denies a non-owner private document",
@@ -101,7 +103,9 @@ describe("canAccessDocument", () => {
             },
             false,
         ],
-    ])("%s", (_name, env, expected) => {
+    ];
+
+    it.each(cases)("%s", (_name, env, expected) => {
         expect(canAccessDocument(env)).toBe(expected);
     });
 });

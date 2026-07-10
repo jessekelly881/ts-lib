@@ -3,7 +3,7 @@ import { and, eq, lit, or } from "./index.js";
 import { fromEffectSchema } from "./effect.js";
 import { toPredicate } from "./run.js";
 
-export const User = Schema.Struct({
+export class User extends Schema.Class<User>("User")({
     id: Schema.String,
     role: Schema.Literals(["guest", "member", "admin"]),
     orgId: Schema.String,
@@ -12,21 +12,21 @@ export const User = Schema.Struct({
         id: Schema.String,
         disabled: Schema.Boolean,
     }),
-});
+}) {}
 
-export const Document = Schema.Struct({
+export class Document extends Schema.Class<Document>("Document")({
     orgId: Schema.String,
     ownerId: Schema.String,
     visibility: Schema.Literals(["private", "org", "public"]),
     status: Schema.Literals(["draft", "published", "archived"]),
     locked: Schema.Boolean,
-});
+}) {}
 
-export const Request = Schema.Struct({
+export class Request extends Schema.Class<Request>("Request")({
     userId: Schema.String,
     action: Schema.Literals(["read", "write", "delete"]),
     mfa: Schema.Boolean,
-});
+}) {}
 
 export const ObjUser = fromEffectSchema("user", User);
 export const ObjDocument = fromEffectSchema("document", Document);

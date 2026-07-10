@@ -1,4 +1,4 @@
-import type { Expr, Primitive } from "./index.js";
+import type { EnvOf, Expr, Primitive } from "./index.js";
 
 type Env = Record<string, unknown>;
 
@@ -31,9 +31,9 @@ export const evaluate = (expr: Expr, env: Env): Primitive => {
 };
 
 export const toPredicate =
-    <A extends Env>(expr: Expr) =>
-        (env: A): boolean =>
-            Boolean(evaluate(expr, env));
+    <E extends Expr>(expr: E) =>
+        (env: EnvOf<E>): boolean =>
+            Boolean(evaluate(expr, env as Env));
 
 export const run = toPredicate;
 
