@@ -8,8 +8,12 @@ export type Expr<A = unknown> = (
     | { _tag: "Ref"; name: string; path: readonly string[] }
     | { _tag: "Literal"; value: Primitive }
     | { _tag: "Eq"; left: Expr; right: Expr }
+    | { _tag: "Not"; expr: Expr }
     | { _tag: "And"; left: Expr; right: Expr }
     | { _tag: "Or"; left: Expr; right: Expr }
+    | { _tag: "Xor"; left: Expr; right: Expr }
+    | { _tag: "Eqv"; left: Expr; right: Expr }
+    | { _tag: "Implies"; antecedent: Expr; consequent: Expr }
 ) & { readonly [EnvTypeId]?: A };
 
 export type Simplify<A> = { readonly [K in keyof A]: A[K] } & {};
@@ -176,6 +180,11 @@ export const eq = <Left extends ExprInput, Right extends ExprInput>(
     right: expr(right),
 });
 
+export const not = <Self extends ExprInput>(self: Self): Expr<Simplify<EnvOfInput<Self>>> => ({
+    _tag: "Not",
+    expr: expr(self),
+});
+
 export const and = <Items extends readonly ExprInput[]>(...items: Items): Expr<Simplify<EnvOfInputs<Items>>> => {
     if (items.length === 0) {
         return lit(true) as Expr<Simplify<EnvOfInputs<Items>>>;
@@ -199,3 +208,45 @@ export const or = <Items extends readonly ExprInput[]>(...items: Items): Expr<Si
         right,
     })) as Expr<Simplify<EnvOfInputs<Items>>>;
 };
+
+const binaryBoolean = <Tag extends "Xor" | "Eqv", Left extends ExprInput, Right extends ExprInput>(
+    tag: Tag,
+    left: Left,
+    right: Right,
+): Expr<Simplify<EnvOfInput<Left> & EnvOfInput<Right>>> => ({
+    _tag: tag,
+    left: expr(left),
+    right: expr(right),
+});
+
+export const xor = <Left extends ExprInput, Right extends ExprInput>(
+    left: Left,
+    right: Right,
+): Expr<Simplify<EnvOfInput<Left> & EnvOfInput<Right>>> => binaryBoolean("Xor", left, right);
+
+export const eqv = <Left extends ExprInput, Right extends ExprInput>(
+    left: Left,
+    right: Right,
+): Expr<Simplify<EnvOfInput<Left> & EnvOfInput<Right>>> => binaryBoolean("Eqv", left, right);
+
+export const implies = <Antecedent extends ExprInput, Consequent extends ExprInput>(
+    antecedent: Antecedent,
+    consequent: Consequent,
+): Expr<Simplify<EnvOfInput<Antecedent> & EnvOfInput<Consequent>>> => ({
+    _tag: "Implies",
+    antecedent: expr(antecedent),
+    consequent: expr(consequent),
+});
+
+export const nand = <Left extends ExprInput, Right extends ExprInput>(
+    left: Left,
+    right: Right,
+): Expr<Simplify<EnvOfInput<Left> & EnvOfInput<Right>>> =>
+    not(and(left, right)) as Expr<Simplify<EnvOfInput<Left> & EnvOfInput<Right>>>;
+
+export const nor = <Left extends ExprInput, Right extends ExprInput>(
+    left: Left,
+    right: Right,
+): Expr<Simplify<EnvOfInput<Left> & EnvOfInput<Right>>> =>
+    not(or(left, right)) as Expr<Simplify<EnvOfInput<Left> & EnvOfInput<Right>>>;
+

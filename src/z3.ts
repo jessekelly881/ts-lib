@@ -198,12 +198,12 @@ export const createZ3Compiler = async (sorts: Z3Sorts) => {
             }
 
             case "Eq":
-                return "boolean";
-
+            case "Not":
             case "And":
-                return "boolean";
-
             case "Or":
+            case "Xor":
+            case "Eqv":
+            case "Implies":
                 return "boolean";
         }
     };
@@ -220,8 +220,12 @@ export const createZ3Compiler = async (sorts: Z3Sorts) => {
                 return compileLiteral(expr.value, expectedSort);
 
             case "Eq":
+            case "Not":
             case "And":
             case "Or":
+            case "Xor":
+            case "Eqv":
+            case "Implies":
                 return compileBoolean(expr);
         }
     };
@@ -279,6 +283,9 @@ export const createZ3Compiler = async (sorts: Z3Sorts) => {
             case "Eq":
                 return compileEquality(expr);
 
+            case "Not":
+                return context.Not(compileBoolean(expr.expr));
+
             case "And":
                 return context.And(
                     compileBoolean(expr.left),
@@ -289,6 +296,21 @@ export const createZ3Compiler = async (sorts: Z3Sorts) => {
                 return context.Or(
                     compileBoolean(expr.left),
                     compileBoolean(expr.right),
+                );
+
+            case "Xor":
+                return context.Xor(
+                    compileBoolean(expr.left),
+                    compileBoolean(expr.right),
+                );
+
+            case "Eqv":
+                return compileBoolean(expr.left).eq(compileBoolean(expr.right));
+
+            case "Implies":
+                return context.Implies(
+                    compileBoolean(expr.antecedent),
+                    compileBoolean(expr.consequent),
                 );
         }
     };

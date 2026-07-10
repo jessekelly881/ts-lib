@@ -72,7 +72,7 @@ describe("canAccessDocument", () => {
                     visibility: "private",
                     locked: true,
                 },
-                request: { ...baseEnv.request, userId: "user_3", action: "delete" },
+                request: { ...baseEnv.request, userId: "user_3", action: "delete", mfa: true },
             },
             true,
         ],
