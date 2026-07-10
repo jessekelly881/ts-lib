@@ -13,6 +13,7 @@ import {
     gt,
     gte,
     implies,
+    intLit,
     lit,
     lt,
     lte,
@@ -59,12 +60,12 @@ const cases = [
     ["notOneOf", notOneOf(lit("archived"), ["draft", "published"]), true],
     ["stringLength", eq(stringLength(lit("policy")), lit(6)), true],
     ["concat", eq(concat(lit("sec"), lit("urity")), lit("security")), true],
-    ["substring", eq(substring(lit("security"), lit(0), lit(3)), lit("sec")), true],
+    ["substring", eq(substring(lit("security"), intLit(0), intLit(3)), lit("sec")), true],
     ["add", eq(add(lit(2), lit(3)), lit(5)), true],
     ["sub", eq(sub(lit(7), lit(2)), lit(5)), true],
     ["mul", eq(mul(lit(4), lit(3)), lit(12)), true],
     ["div", eq(div(lit(12), lit(3)), lit(4)), true],
-    ["mod", eq(mod(lit(13), lit(5)), lit(3)), true],
+    ["mod", eq(mod(intLit(13), intLit(5)), intLit(3)), true],
 ] as const;
 
 const finiteNumber = fc.integer({ min: -100, max: 100 });
@@ -78,12 +79,12 @@ const sameSortComparableLiterals = fc.oneof(
     fc.tuple(booleanLiteral, booleanLiteral),
 );
 
-const userAge = ref("user.age") as Expr<TestEnv>;
-const userEmail = ref("user.email") as Expr<TestEnv>;
-const userSuspended = ref("user.suspended") as Expr<TestEnv>;
-const documentSensitivity = ref("document.sensitivity") as Expr<TestEnv>;
-const documentTitle = ref("document.title") as Expr<TestEnv>;
-const documentPublished = ref("document.published") as Expr<TestEnv>;
+const userAge = ref("user.age") as Expr<TestEnv, "int">;
+const userEmail = ref("user.email") as Expr<TestEnv, "string">;
+const userSuspended = ref("user.suspended") as Expr<TestEnv, "boolean">;
+const documentSensitivity = ref("document.sensitivity") as Expr<TestEnv, "int">;
+const documentTitle = ref("document.title") as Expr<TestEnv, "string">;
+const documentPublished = ref("document.published") as Expr<TestEnv, "boolean">;
 
 const testSorts = {
     "user.age": "int",
@@ -123,7 +124,7 @@ const envArbitrary: fc.Arbitrary<TestEnv> = fc.record({
     }),
 });
 
-const envConstraints = (env: TestEnv): Expr => and(
+const envConstraints = (env: TestEnv): Expr<unknown, "boolean"> => and(
     eq(userAge, lit(env.user.age)),
     eq(userEmail, lit(env.user.email)),
     eq(userSuspended, lit(env.user.suspended)),
@@ -133,7 +134,7 @@ const envConstraints = (env: TestEnv): Expr => and(
 );
 
 const refBooleanExpr = fc.letrec<{
-    expr: Expr<TestEnv>;
+    expr: Expr<TestEnv, "boolean">;
 }>((tie) => ({
     expr: fc.oneof(
         fc.boolean().map((value) => lit(value) as Expr<TestEnv>),
@@ -146,11 +147,11 @@ const refBooleanExpr = fc.letrec<{
         fc.tuple(tie("expr"), tie("expr")).map(([left, right]) => and(left, right)),
         fc.tuple(tie("expr"), tie("expr")).map(([left, right]) => or(left, right)),
         fc.tuple(tie("expr"), tie("expr")).map(([left, right]) => implies(left, right)),
-    ).map((expr) => expr as Expr<TestEnv>),
+    ).map((expr) => expr as Expr<TestEnv, "boolean">),
 })).expr;
 
 const booleanExpr = fc.letrec<{
-    expr: Expr;
+    expr: Expr<unknown, "boolean">;
 }>((tie) => ({
     expr: fc.oneof(
         booleanLiteral,

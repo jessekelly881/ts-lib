@@ -46,10 +46,18 @@ const annotatedModelType = (ast: EffectAst): ModelSchemaType | undefined => {
         : undefined;
 };
 
+type SortOfTs<T> = T extends string
+    ? "string"
+    : T extends boolean
+      ? "boolean"
+      : T extends number
+        ? "number" | "int"
+        : never;
+
 type ModelRefs<Name extends string, Root, T> = {
     readonly [K in keyof T]: T[K] extends Record<string, unknown>
         ? ModelRefs<Name, Root, T[K]>
-        : Expr<{ readonly [K in Name]: Root }>;
+        : Expr<{ readonly [K in Name]: Root }, SortOfTs<T[K]>>;
 };
 
 export type EffectModel<Name extends string, S extends EffectTop> = ObjectSchema &

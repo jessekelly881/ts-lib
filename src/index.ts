@@ -3,8 +3,22 @@
 export type Primitive = string | number | boolean | null;
 
 declare const EnvTypeId: unique symbol;
+declare const SortTypeId: unique symbol;
 
-export type Expr<A = unknown> = (
+export type ExprSort = "boolean" | "string" | "number" | "int" | "null";
+export type NumericSort = "number" | "int";
+
+type PrimitiveSort<A extends Primitive> = A extends string
+    ? "string"
+    : A extends boolean
+      ? "boolean"
+      : A extends number
+        ? "number"
+        : A extends null
+          ? "null"
+          : ExprSort;
+
+export type Expr<A = unknown, S extends ExprSort = ExprSort> = (
     | { _tag: "Ref"; name: string; path: readonly string[] }
     | { _tag: "Literal"; value: Primitive }
     | { _tag: "Eq"; left: Expr; right: Expr }
@@ -30,14 +44,26 @@ export type Expr<A = unknown> = (
     | { _tag: "Xor"; left: Expr; right: Expr }
     | { _tag: "Eqv"; left: Expr; right: Expr }
     | { _tag: "Implies"; antecedent: Expr; consequent: Expr }
-) & { readonly [EnvTypeId]?: A };
+) & { readonly [EnvTypeId]?: A; readonly [SortTypeId]?: S };
 
 export type Simplify<A> = { readonly [K in keyof A]: A[K] } & {};
 
-export type EnvOf<E> = E extends Expr<infer A> ? Simplify<A> : unknown;
+export type EnvOf<E> = E extends Expr<infer A, ExprSort> ? Simplify<A> : unknown;
+export type SortOf<E> = E extends Expr<unknown, infer S> ? S : E extends Primitive ? PrimitiveSort<E> : never;
 
-type ExprInput = Expr | Primitive;
-type EnvOfInput<I> = I extends Expr<infer A> ? A : unknown;
+type PrimitiveForSort<S extends ExprSort> = S extends "string"
+    ? string
+    : S extends "boolean"
+      ? boolean
+      : S extends "number"
+        ? number
+        : S extends "int"
+          ? never
+          : S extends "null"
+            ? null
+            : Primitive;
+type ExprInput<S extends ExprSort = ExprSort> = Expr<unknown, S> | PrimitiveForSort<S>;
+type EnvOfInput<I> = I extends Expr<infer A, ExprSort> ? A : unknown;
 type UnionToIntersection<U> = (U extends unknown ? (value: U) => void : never) extends (
     value: infer I,
 ) => void
@@ -46,6 +72,18 @@ type UnionToIntersection<U> = (U extends unknown ? (value: U) => void : never) e
 type EnvOfInputs<Items extends readonly ExprInput[]> = UnionToIntersection<
     EnvOfInput<Items[number]>
 >;
+type MergeEnv<Left, Right> = Simplify<EnvOfInput<Left> & EnvOfInput<Right>>;
+type SameSortComparable<Left extends ExprInput, Right extends ExprInput> = SortOf<Left> extends SortOf<Right>
+    ? Right
+    : SortOf<Left> extends NumericSort
+      ? SortOf<Right> extends NumericSort
+        ? Right
+        : never
+      : never;
+type NumericInput = ExprInput<NumericSort>;
+type IntInput = ExprInput<"int">;
+type StringInput = ExprInput<"string">;
+type BooleanInput = ExprInput<"boolean">;
 
 export type PrimitiveOf<T> = T extends string
     ? string
@@ -71,10 +109,22 @@ export interface ObjectSchema<Fields extends Readonly<Record<string, Schema>> = 
 
 export type Schema = ScalarSchema | ObjectSchema;
 
+type SortOfSchema<S extends Schema> = S extends { readonly _tag: "StringSchema" }
+    ? "string"
+    : S extends { readonly _tag: "NumberSchema" }
+      ? "number"
+      : S extends { readonly _tag: "IntSchema" }
+        ? "int"
+        : S extends { readonly _tag: "BooleanSchema" }
+          ? "boolean"
+          : S extends { readonly _tag: "EnumSchema" }
+            ? "string"
+            : ExprSort;
+
 export type ObjectModel<Fields extends Readonly<Record<string, Schema>>, A = unknown> = ObjectSchema<Fields> & {
     readonly [K in keyof Fields]: Fields[K] extends ObjectSchema<infer NestedFields>
         ? ObjectModel<NestedFields, A>
-        : Expr<A>;
+        : Expr<A, SortOfSchema<Fields[K]>>;
 };
 
 export type InferSchema<S extends Schema> = S extends { readonly _tag: "StringSchema" }
@@ -108,7 +158,7 @@ export const enum_ = <Values extends readonly [string, ...string[]]>(
 
 export { enum_ as enum };
 
-const refFromParts = <A>(name: string, path: readonly string[]): Expr<A> => ({
+const refFromParts = <A, S extends ExprSort>(name: string, path: readonly string[]): Expr<A, S> => ({
     _tag: "Ref",
     name,
     path,
@@ -161,20 +211,31 @@ export function object<Fields extends Readonly<Record<string, Schema>>>(
     return name === undefined ? schema : attachRefs(schema, name);
 }
 
-export const lit = <A extends Primitive>(value: A): Expr<unknown> => ({
+export const lit = <A extends Primitive>(value: A): Expr<unknown, PrimitiveSort<A>> => ({
     _tag: "Literal",
     value,
 });
+
+export const intLit = <A extends number>(value: A): Expr<unknown, "int"> => {
+    if (!Number.isInteger(value)) {
+        throw new TypeError(`Expected integer literal, received ${String(value)}`);
+    }
+
+    return {
+        _tag: "Literal",
+        value,
+    };
+};
 
 const isExpr = (value: unknown): value is Expr =>
     typeof value === "object" &&
     value !== null &&
     "_tag" in value;
 
-const expr = <A extends ExprInput>(value: A): Expr<EnvOfInput<A>> =>
-    (isExpr(value) ? value : lit(value)) as Expr<EnvOfInput<A>>;
+const expr = <A extends ExprInput>(value: A): Expr<EnvOfInput<A>, SortOf<A>> =>
+    (isExpr(value) ? value : lit(value)) as Expr<EnvOfInput<A>, SortOf<A>>;
 
-export const ref = (path: string): Expr => {
+export const ref = <S extends ExprSort = ExprSort>(path: string): Expr<unknown, S> => {
     const [name, ...rest] = path.split(".");
 
     if (name === undefined || name.length === 0 || rest.length === 0) {
@@ -200,7 +261,7 @@ const binaryValue = <
     tag: Tag,
     left: Left,
     right: Right,
-): Expr<Simplify<EnvOfInput<Left> & EnvOfInput<Right>>> => ({
+): Expr<MergeEnv<Left, Right>, "boolean"> => ({
     _tag: tag,
     left: expr(left),
     right: expr(right),
@@ -208,52 +269,53 @@ const binaryValue = <
 
 export const eq = <Left extends ExprInput, Right extends ExprInput>(
     left: Left,
-    right: Right,
-): Expr<Simplify<EnvOfInput<Left> & EnvOfInput<Right>>> => binaryValue("Eq", left, right);
+    right: SameSortComparable<Left, Right>,
+): Expr<MergeEnv<Left, Right>, "boolean"> => binaryValue("Eq", left, right);
 
 export const neq = <Left extends ExprInput, Right extends ExprInput>(
     left: Left,
-    right: Right,
-): Expr<Simplify<EnvOfInput<Left> & EnvOfInput<Right>>> => binaryValue("Neq", left, right);
+    right: SameSortComparable<Left, Right>,
+): Expr<MergeEnv<Left, Right>, "boolean"> => binaryValue("Neq", left, right);
 
-export const lt = <Left extends ExprInput, Right extends ExprInput>(
+export const lt = <Left extends NumericInput, Right extends NumericInput>(
     left: Left,
     right: Right,
-): Expr<Simplify<EnvOfInput<Left> & EnvOfInput<Right>>> => binaryValue("Lt", left, right);
+): Expr<MergeEnv<Left, Right>, "boolean"> => binaryValue("Lt", left, right);
 
-export const lte = <Left extends ExprInput, Right extends ExprInput>(
+export const lte = <Left extends NumericInput, Right extends NumericInput>(
     left: Left,
     right: Right,
-): Expr<Simplify<EnvOfInput<Left> & EnvOfInput<Right>>> => binaryValue("Lte", left, right);
+): Expr<MergeEnv<Left, Right>, "boolean"> => binaryValue("Lte", left, right);
 
-export const gt = <Left extends ExprInput, Right extends ExprInput>(
+export const gt = <Left extends NumericInput, Right extends NumericInput>(
     left: Left,
     right: Right,
-): Expr<Simplify<EnvOfInput<Left> & EnvOfInput<Right>>> => binaryValue("Gt", left, right);
+): Expr<MergeEnv<Left, Right>, "boolean"> => binaryValue("Gt", left, right);
 
-export const gte = <Left extends ExprInput, Right extends ExprInput>(
+export const gte = <Left extends NumericInput, Right extends NumericInput>(
     left: Left,
     right: Right,
-): Expr<Simplify<EnvOfInput<Left> & EnvOfInput<Right>>> => binaryValue("Gte", left, right);
+): Expr<MergeEnv<Left, Right>, "boolean"> => binaryValue("Gte", left, right);
 
-export const between = <Value extends ExprInput, Min extends ExprInput, Max extends ExprInput>(
+export const between = <Value extends NumericInput, Min extends NumericInput, Max extends NumericInput>(
     value: Value,
     min: Min,
     max: Max,
-): Expr<Simplify<EnvOfInput<Value> & EnvOfInput<Min> & EnvOfInput<Max>>> =>
+): Expr<Simplify<EnvOfInput<Value> & EnvOfInput<Min> & EnvOfInput<Max>>, "boolean"> =>
     and(gte(value, min), lte(value, max)) as Expr<
-        Simplify<EnvOfInput<Value> & EnvOfInput<Min> & EnvOfInput<Max>>
+        Simplify<EnvOfInput<Value> & EnvOfInput<Min> & EnvOfInput<Max>>,
+        "boolean"
     >;
 
 const binaryString = <
     Tag extends "Contains" | "StartsWith" | "EndsWith",
-    Self extends ExprInput,
-    Search extends ExprInput,
+    Self extends StringInput,
+    Search extends StringInput,
 >(
     tag: Tag,
     self: Self,
     search: Search,
-): Expr<Simplify<EnvOfInput<Self> & EnvOfInput<Search>>> => ({
+): Expr<MergeEnv<Self, Search>, "boolean"> => ({
     _tag: tag,
     self: expr(self),
     ...(tag === "Contains"
@@ -261,53 +323,56 @@ const binaryString = <
         : tag === "StartsWith"
           ? { prefix: expr(search) }
           : { suffix: expr(search) }),
-} as Expr<Simplify<EnvOfInput<Self> & EnvOfInput<Search>>>);
+} as Expr<MergeEnv<Self, Search>, "boolean">);
 
-export const contains = <Self extends ExprInput, Search extends ExprInput>(
+export const contains = <Self extends StringInput, Search extends StringInput>(
     self: Self,
     search: Search,
-): Expr<Simplify<EnvOfInput<Self> & EnvOfInput<Search>>> => binaryString("Contains", self, search);
+): Expr<MergeEnv<Self, Search>, "boolean"> => binaryString("Contains", self, search);
 
-export const startsWith = <Self extends ExprInput, Prefix extends ExprInput>(
+export const startsWith = <Self extends StringInput, Prefix extends StringInput>(
     self: Self,
     prefix: Prefix,
-): Expr<Simplify<EnvOfInput<Self> & EnvOfInput<Prefix>>> => binaryString("StartsWith", self, prefix);
+): Expr<MergeEnv<Self, Prefix>, "boolean"> => binaryString("StartsWith", self, prefix);
 
-export const endsWith = <Self extends ExprInput, Suffix extends ExprInput>(
+export const endsWith = <Self extends StringInput, Suffix extends StringInput>(
     self: Self,
     suffix: Suffix,
-): Expr<Simplify<EnvOfInput<Self> & EnvOfInput<Suffix>>> => binaryString("EndsWith", self, suffix);
+): Expr<MergeEnv<Self, Suffix>, "boolean"> => binaryString("EndsWith", self, suffix);
 
 export const oneOf = <Value extends ExprInput, Values extends readonly [Primitive, ...Primitive[]]>(
     value: Value,
     values: Values,
-): Expr<Simplify<EnvOfInput<Value>>> =>
-    or(...values.map((item) => eq(value, lit(item)))) as Expr<Simplify<EnvOfInput<Value>>>;
+): Expr<Simplify<EnvOfInput<Value>>, "boolean"> =>
+    or(...values.map((item) => eq(value as never, lit(item) as never))) as Expr<
+        Simplify<EnvOfInput<Value>>,
+        "boolean"
+    >;
 
 export const notOneOf = <Value extends ExprInput, Values extends readonly [Primitive, ...Primitive[]]>(
     value: Value,
     values: Values,
-): Expr<Simplify<EnvOfInput<Value>>> => not(oneOf(value, values));
+): Expr<Simplify<EnvOfInput<Value>>, "boolean"> => not(oneOf(value, values));
 
-export const stringLength = <Self extends ExprInput>(self: Self): Expr<Simplify<EnvOfInput<Self>>> => ({
+export const stringLength = <Self extends StringInput>(self: Self): Expr<Simplify<EnvOfInput<Self>>, "int"> => ({
     _tag: "StringLength",
     self: expr(self),
 });
 
-export const concat = <Left extends ExprInput, Right extends ExprInput>(
+export const concat = <Left extends StringInput, Right extends StringInput>(
     left: Left,
     right: Right,
-): Expr<Simplify<EnvOfInput<Left> & EnvOfInput<Right>>> => ({
+): Expr<MergeEnv<Left, Right>, "string"> => ({
     _tag: "Concat",
     left: expr(left),
     right: expr(right),
 });
 
-export const substring = <Self extends ExprInput, Offset extends ExprInput, Length extends ExprInput>(
+export const substring = <Self extends StringInput, Offset extends IntInput, Length extends IntInput>(
     self: Self,
     offset: Offset,
     length: Length,
-): Expr<Simplify<EnvOfInput<Self> & EnvOfInput<Offset> & EnvOfInput<Length>>> => ({
+): Expr<Simplify<EnvOfInput<Self> & EnvOfInput<Offset> & EnvOfInput<Length>>, "string"> => ({
     _tag: "Substring",
     self: expr(self),
     offset: expr(offset),
@@ -316,110 +381,110 @@ export const substring = <Self extends ExprInput, Offset extends ExprInput, Leng
 
 const binaryNumber = <
     Tag extends "Add" | "Sub" | "Mul" | "Div" | "Mod",
-    Left extends ExprInput,
-    Right extends ExprInput,
+    Left extends NumericInput,
+    Right extends NumericInput,
 >(
     tag: Tag,
     left: Left,
     right: Right,
-): Expr<Simplify<EnvOfInput<Left> & EnvOfInput<Right>>> => ({
+): Expr<MergeEnv<Left, Right>, Tag extends "Mod" ? "int" : "number"> => ({
     _tag: tag,
     left: expr(left),
     right: expr(right),
 });
 
-export const add = <Left extends ExprInput, Right extends ExprInput>(
+export const add = <Left extends NumericInput, Right extends NumericInput>(
     left: Left,
     right: Right,
-): Expr<Simplify<EnvOfInput<Left> & EnvOfInput<Right>>> => binaryNumber("Add", left, right);
+): Expr<MergeEnv<Left, Right>, "number"> => binaryNumber("Add", left, right);
 
-export const sub = <Left extends ExprInput, Right extends ExprInput>(
+export const sub = <Left extends NumericInput, Right extends NumericInput>(
     left: Left,
     right: Right,
-): Expr<Simplify<EnvOfInput<Left> & EnvOfInput<Right>>> => binaryNumber("Sub", left, right);
+): Expr<MergeEnv<Left, Right>, "number"> => binaryNumber("Sub", left, right);
 
-export const mul = <Left extends ExprInput, Right extends ExprInput>(
+export const mul = <Left extends NumericInput, Right extends NumericInput>(
     left: Left,
     right: Right,
-): Expr<Simplify<EnvOfInput<Left> & EnvOfInput<Right>>> => binaryNumber("Mul", left, right);
+): Expr<MergeEnv<Left, Right>, "number"> => binaryNumber("Mul", left, right);
 
-export const div = <Left extends ExprInput, Right extends ExprInput>(
+export const div = <Left extends NumericInput, Right extends NumericInput>(
     left: Left,
     right: Right,
-): Expr<Simplify<EnvOfInput<Left> & EnvOfInput<Right>>> => binaryNumber("Div", left, right);
+): Expr<MergeEnv<Left, Right>, "number"> => binaryNumber("Div", left, right);
 
-export const mod = <Left extends ExprInput, Right extends ExprInput>(
+export const mod = <Left extends IntInput, Right extends IntInput>(
     left: Left,
     right: Right,
-): Expr<Simplify<EnvOfInput<Left> & EnvOfInput<Right>>> => binaryNumber("Mod", left, right);
+): Expr<MergeEnv<Left, Right>, "int"> => binaryNumber("Mod", left, right);
 
-export const not = <Self extends ExprInput>(self: Self): Expr<Simplify<EnvOfInput<Self>>> => ({
+export const not = <Self extends BooleanInput>(self: Self): Expr<Simplify<EnvOfInput<Self>>, "boolean"> => ({
     _tag: "Not",
     expr: expr(self),
 });
 
-export const and = <Items extends readonly ExprInput[]>(...items: Items): Expr<Simplify<EnvOfInputs<Items>>> => {
+export const and = <Items extends readonly BooleanInput[]>(...items: Items): Expr<Simplify<EnvOfInputs<Items>>, "boolean"> => {
     if (items.length === 0) {
-        return lit(true) as Expr<Simplify<EnvOfInputs<Items>>>;
+        return lit(true) as Expr<Simplify<EnvOfInputs<Items>>, "boolean">;
     }
 
     return items.map(expr).reduce((left, right) => ({
         _tag: "And",
         left,
         right,
-    })) as Expr<Simplify<EnvOfInputs<Items>>>;
+    })) as Expr<Simplify<EnvOfInputs<Items>>, "boolean">;
 };
 
-export const or = <Items extends readonly ExprInput[]>(...items: Items): Expr<Simplify<EnvOfInputs<Items>>> => {
+export const or = <Items extends readonly BooleanInput[]>(...items: Items): Expr<Simplify<EnvOfInputs<Items>>, "boolean"> => {
     if (items.length === 0) {
-        return lit(false) as Expr<Simplify<EnvOfInputs<Items>>>;
+        return lit(false) as Expr<Simplify<EnvOfInputs<Items>>, "boolean">;
     }
 
     return items.map(expr).reduce((left, right) => ({
         _tag: "Or",
         left,
         right,
-    })) as Expr<Simplify<EnvOfInputs<Items>>>;
+    })) as Expr<Simplify<EnvOfInputs<Items>>, "boolean">;
 };
 
-const binaryBoolean = <Tag extends "Xor" | "Eqv", Left extends ExprInput, Right extends ExprInput>(
+const binaryBoolean = <Tag extends "Xor" | "Eqv", Left extends BooleanInput, Right extends BooleanInput>(
     tag: Tag,
     left: Left,
     right: Right,
-): Expr<Simplify<EnvOfInput<Left> & EnvOfInput<Right>>> => ({
+): Expr<MergeEnv<Left, Right>, "boolean"> => ({
     _tag: tag,
     left: expr(left),
     right: expr(right),
 });
 
-export const xor = <Left extends ExprInput, Right extends ExprInput>(
+export const xor = <Left extends BooleanInput, Right extends BooleanInput>(
     left: Left,
     right: Right,
-): Expr<Simplify<EnvOfInput<Left> & EnvOfInput<Right>>> => binaryBoolean("Xor", left, right);
+): Expr<MergeEnv<Left, Right>, "boolean"> => binaryBoolean("Xor", left, right);
 
-export const eqv = <Left extends ExprInput, Right extends ExprInput>(
+export const eqv = <Left extends BooleanInput, Right extends BooleanInput>(
     left: Left,
     right: Right,
-): Expr<Simplify<EnvOfInput<Left> & EnvOfInput<Right>>> => binaryBoolean("Eqv", left, right);
+): Expr<MergeEnv<Left, Right>, "boolean"> => binaryBoolean("Eqv", left, right);
 
-export const implies = <Antecedent extends ExprInput, Consequent extends ExprInput>(
+export const implies = <Antecedent extends BooleanInput, Consequent extends BooleanInput>(
     antecedent: Antecedent,
     consequent: Consequent,
-): Expr<Simplify<EnvOfInput<Antecedent> & EnvOfInput<Consequent>>> => ({
+): Expr<MergeEnv<Antecedent, Consequent>, "boolean"> => ({
     _tag: "Implies",
     antecedent: expr(antecedent),
     consequent: expr(consequent),
 });
 
-export const nand = <Left extends ExprInput, Right extends ExprInput>(
+export const nand = <Left extends BooleanInput, Right extends BooleanInput>(
     left: Left,
     right: Right,
-): Expr<Simplify<EnvOfInput<Left> & EnvOfInput<Right>>> =>
-    not(and(left, right)) as Expr<Simplify<EnvOfInput<Left> & EnvOfInput<Right>>>;
+): Expr<MergeEnv<Left, Right>, "boolean"> =>
+    not(and(left, right)) as Expr<MergeEnv<Left, Right>, "boolean">;
 
-export const nor = <Left extends ExprInput, Right extends ExprInput>(
+export const nor = <Left extends BooleanInput, Right extends BooleanInput>(
     left: Left,
     right: Right,
-): Expr<Simplify<EnvOfInput<Left> & EnvOfInput<Right>>> =>
-    not(or(left, right)) as Expr<Simplify<EnvOfInput<Left> & EnvOfInput<Right>>>;
+): Expr<MergeEnv<Left, Right>, "boolean"> =>
+    not(or(left, right)) as Expr<MergeEnv<Left, Right>, "boolean">;
 

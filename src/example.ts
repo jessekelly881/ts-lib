@@ -8,6 +8,7 @@ import {
     eq,
     gte,
     implies,
+    intLit,
     lit,
     nor,
     not,
@@ -79,7 +80,7 @@ const userCanSeeDocumentExpr = or(
     and(
         eq(ObjDocument.visibility, lit("public")),
         startsWith(ObjDocument.slug, concat(lit("docs"), lit("/"))),
-        eq(substring(ObjDocument.slug, lit(0), lit(5)), lit("docs/")),
+        eq(substring(ObjDocument.slug, intLit(0), intLit(5)), lit("docs/")),
         between(ObjDocument.sensitivity, lit(0), lit(2)),
     ),
     and(
