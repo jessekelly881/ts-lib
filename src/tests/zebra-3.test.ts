@@ -20,51 +20,53 @@ const allNationalitiesDifferentExpr = Arr.unique(A.map(Houses.items, (house) => 
 const allAnimalsDifferentExpr = Arr.unique(A.map(Houses.items, (house) => house.animal));
 const allSportsDifferentExpr = Arr.unique(A.map(Houses.items, (house) => house.sport));
 
+const adjacentIndexes = A.zip(A.range(0, Houses.items.length - 2), A.range(1, Houses.items.length - 1));
+const indexesSeparatedBy = (gap: number) => {
+  const distance = gap + 1;
+  return A.zip(A.range(0, Houses.items.length - distance - 1), A.range(distance, Houses.items.length - 1));
+};
+const indexesSeparatedByEitherSide = (gap: number) =>
+  A.flatMap(indexesSeparatedBy(gap), ([left, right]) => [[left, right], [right, left]] as const);
+const orderedIndexes = A.flatMap(A.range(0, Houses.items.length - 2), (left) =>
+  A.map(A.range(left + 1, Houses.items.length - 1), (right) => [left, right] as const)
+);
+
 // There are two houses between the person who likes Bowling and the person who likes Swimming.
-const bowlingTwoHousesFromSwimmingExpr = or(
-  and(eq(Houses[0].sport, "Bowling"), eq(Houses[3].sport, "Swimming")),
-  and(eq(Houses[3].sport, "Bowling"), eq(Houses[0].sport, "Swimming")),
+const bowlingTwoHousesFromSwimmingExpr = Arr.some(indexesSeparatedByEitherSide(2), ([bowling, swimming]) =>
+  and(eq(Houses[bowling].sport, "Bowling"), eq(Houses[swimming].sport, "Swimming"))
 );
 
 // There is one house between the Irish and the person who likes Handball on the left.
-const handballOneHouseLeftOfIrishExpr = or(
-  and(eq(Houses[0].sport, "Handball"), eq(Houses[2].nationality, "Irish")),
-  and(eq(Houses[1].sport, "Handball"), eq(Houses[3].nationality, "Irish")),
+const handballOneHouseLeftOfIrishExpr = Arr.some(indexesSeparatedBy(1), ([handball, irish]) =>
+  and(eq(Houses[handball].sport, "Handball"), eq(Houses[irish].nationality, "Irish"))
 );
 
 // The second house is Black.
 const secondHouseIsBlackExpr = eq(Houses[1].color, "Black");
 
 // There is one house between the person who likes Horses and the Red house on the right.
-const horsesOneHouseLeftOfRedExpr = or(
-  and(eq(Houses[0].animal, "Horses"), eq(Houses[2].color, "Red")),
-  and(eq(Houses[1].animal, "Horses"), eq(Houses[3].color, "Red")),
+const horsesOneHouseLeftOfRedExpr = Arr.some(indexesSeparatedBy(1), ([horses, red]) =>
+  and(eq(Houses[horses].animal, "Horses"), eq(Houses[red].color, "Red"))
 );
 
 // The American lives directly to the left of the person who likes Turtles.
-const americanDirectlyLeftOfTurtlesExpr = or(
-  and(eq(Houses[0].nationality, "American"), eq(Houses[1].animal, "Turtles")),
-  and(eq(Houses[1].nationality, "American"), eq(Houses[2].animal, "Turtles")),
-  and(eq(Houses[2].nationality, "American"), eq(Houses[3].animal, "Turtles")),
+const americanDirectlyLeftOfTurtlesExpr = Arr.some(adjacentIndexes, ([american, turtles]) =>
+  and(eq(Houses[american].nationality, "American"), eq(Houses[turtles].animal, "Turtles"))
 );
 
 // There are two houses between the person who likes Horses and the person who likes Butterflies on the right.
-const horsesTwoHousesLeftOfButterfliesExpr = and(eq(Houses[0].animal, "Horses"), eq(Houses[3].animal, "Butterflies"));
+const horsesTwoHousesLeftOfButterfliesExpr = Arr.some(indexesSeparatedBy(2), ([horses, butterflies]) =>
+  and(eq(Houses[horses].animal, "Horses"), eq(Houses[butterflies].animal, "Butterflies"))
+);
 
 // The person who likes Bowling lives somewhere to the right of the person who likes Tennis.
-const bowlingRightOfTennisExpr = or(
-  and(eq(Houses[0].sport, "Tennis"), eq(Houses[1].sport, "Bowling")),
-  and(eq(Houses[0].sport, "Tennis"), eq(Houses[2].sport, "Bowling")),
-  and(eq(Houses[0].sport, "Tennis"), eq(Houses[3].sport, "Bowling")),
-  and(eq(Houses[1].sport, "Tennis"), eq(Houses[2].sport, "Bowling")),
-  and(eq(Houses[1].sport, "Tennis"), eq(Houses[3].sport, "Bowling")),
-  and(eq(Houses[2].sport, "Tennis"), eq(Houses[3].sport, "Bowling")),
+const bowlingRightOfTennisExpr = Arr.some(orderedIndexes, ([tennis, bowling]) =>
+  and(eq(Houses[tennis].sport, "Tennis"), eq(Houses[bowling].sport, "Bowling"))
 );
 
 // There is one house between the person who likes Handball and the White house on the right.
-const handballOneHouseLeftOfWhiteExpr = or(
-  and(eq(Houses[0].sport, "Handball"), eq(Houses[2].color, "White")),
-  and(eq(Houses[1].sport, "Handball"), eq(Houses[3].color, "White")),
+const handballOneHouseLeftOfWhiteExpr = Arr.some(indexesSeparatedBy(1), ([handball, white]) =>
+  and(eq(Houses[handball].sport, "Handball"), eq(Houses[white].color, "White"))
 );
 
 // The British lives in the first house.
