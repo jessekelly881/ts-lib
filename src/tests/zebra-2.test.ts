@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { expect, it } from "vitest";
 import { createZ3Compiler, z3Sorts } from "../z3.js";
 import { Schema } from "effect";
 import { and, eq, neq, or } from "../index.js";
