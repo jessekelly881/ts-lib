@@ -1,6 +1,6 @@
 import { expect, it } from "vitest";
 import { createZ3Compiler, z3Sorts } from "../z3.js";
-import { Schema } from "effect";
+import { Array as EffectArray, Schema } from "effect";
 import { and, eq, or } from "../index.js";
 import * as Arr from "../array.js";
 import { fromEffectSchema } from "../effect.js";
@@ -15,10 +15,10 @@ export class House extends Schema.Class<House>("House")({
 
 export const Houses = fromEffectSchema("houses", Schema.Tuple([House, House, House, House] as const));
 
-const allColorsDifferentExpr = Arr.unique(Houses.items.map((house) => house.color));
-const allNationalitiesDifferentExpr = Arr.unique(Houses.items.map((house) => house.nationality));
-const allAnimalsDifferentExpr = Arr.unique(Houses.items.map((house) => house.animal));
-const allSportsDifferentExpr = Arr.unique(Houses.items.map((house) => house.sport));
+const allColorsDifferentExpr = Arr.unique(EffectArray.map(Houses.items, (house) => house.color));
+const allNationalitiesDifferentExpr = Arr.unique(EffectArray.map(Houses.items, (house) => house.nationality));
+const allAnimalsDifferentExpr = Arr.unique(EffectArray.map(Houses.items, (house) => house.animal));
+const allSportsDifferentExpr = Arr.unique(EffectArray.map(Houses.items, (house) => house.sport));
 
 // There are two houses between the person who likes Bowling and the person who likes Swimming.
 const bowlingTwoHousesFromSwimmingExpr = or(

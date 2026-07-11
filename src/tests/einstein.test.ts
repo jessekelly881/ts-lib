@@ -1,6 +1,6 @@
 import { expect, it } from "vitest";
-import { Schema } from "effect";
-import { and, eq, or } from "../index.js";
+import { Array as EffectArray, Schema } from "effect";
+import { and, eq } from "../index.js";
 import * as Arr from "../array.js";
 import { fromEffectSchema } from "../effect.js";
 import { createZ3Compiler, z3Sorts } from "../z3.js";
@@ -16,31 +16,38 @@ export class House extends Schema.Class<House>("House")({
 
 export const Houses = fromEffectSchema("houses", Schema.Tuple([House, House, House, House, House] as const));
 
-const allColorsDifferentExpr = Arr.unique(Houses.items.map((house) => house.color));
-const allNationalitiesDifferentExpr = Arr.unique(Houses.items.map((house) => house.nationality));
-const allDrinksDifferentExpr = Arr.unique(Houses.items.map((house) => house.drink));
-const allCigarettesDifferentExpr = Arr.unique(Houses.items.map((house) => house.cigarette));
-const allPetsDifferentExpr = Arr.unique(Houses.items.map((house) => house.pet));
+const allColorsDifferentExpr = Arr.unique(EffectArray.map(Houses.items, (house) => house.color));
+const allNationalitiesDifferentExpr = Arr.unique(EffectArray.map(Houses.items, (house) => house.nationality));
+const allDrinksDifferentExpr = Arr.unique(EffectArray.map(Houses.items, (house) => house.drink));
+const allCigarettesDifferentExpr = Arr.unique(EffectArray.map(Houses.items, (house) => house.cigarette));
+const allPetsDifferentExpr = Arr.unique(EffectArray.map(Houses.items, (house) => house.pet));
+
+const houseIndexes = EffectArray.range(0, Houses.items.length - 1);
+const adjacentHouseIndexes = EffectArray.zip(
+  EffectArray.range(0, Houses.items.length - 2),
+  EffectArray.range(1, Houses.items.length - 1),
+);
+const neighboringHouseIndexes = EffectArray.flatMap(adjacentHouseIndexes, ([left, right]) => [[left, right], [right, left]] as const);
 
 const Fields = {
-  color: [Houses[0].color, Houses[1].color, Houses[2].color, Houses[3].color, Houses[4].color],
-  nationality: [Houses[0].nationality, Houses[1].nationality, Houses[2].nationality, Houses[3].nationality, Houses[4].nationality],
-  drink: [Houses[0].drink, Houses[1].drink, Houses[2].drink, Houses[3].drink, Houses[4].drink],
-  cigarette: [Houses[0].cigarette, Houses[1].cigarette, Houses[2].cigarette, Houses[3].cigarette, Houses[4].cigarette],
-  pet: [Houses[0].pet, Houses[1].pet, Houses[2].pet, Houses[3].pet, Houses[4].pet],
+  color: EffectArray.map(Houses.items, (house) => house.color),
+  nationality: EffectArray.map(Houses.items, (house) => house.nationality),
+  drink: EffectArray.map(Houses.items, (house) => house.drink),
+  cigarette: EffectArray.map(Houses.items, (house) => house.cigarette),
+  pet: EffectArray.map(Houses.items, (house) => house.pet),
 };
 
 type Field = keyof typeof Fields;
 
-const fieldEq = (houseIndex: 0 | 1 | 2 | 3 | 4, field: Field, value: string) => eq(Fields[field][houseIndex], value);
+const fieldEq = (houseIndex: number, field: Field, value: string) => eq(Fields[field][houseIndex], value);
 
 const sameHouse = (field: Field, value: string, otherField: Field, otherValue: string) =>
-  Arr.some([0, 1, 2, 3, 4] as const, (index) =>
+  Arr.some(houseIndexes, (index) =>
     and(fieldEq(index, field, value), fieldEq(index, otherField, otherValue))
   );
 
 const nextTo = (field: Field, value: string, otherField: Field, otherValue: string) =>
-  Arr.some([[0, 1], [1, 0], [1, 2], [2, 1], [2, 3], [3, 2], [3, 4], [4, 3]] as const, ([index, otherIndex]) =>
+  Arr.some(neighboringHouseIndexes, ([index, otherIndex]) =>
     and(fieldEq(index, field, value), fieldEq(otherIndex, otherField, otherValue))
   );
 
@@ -54,11 +61,8 @@ const swedeKeepsDogsExpr = sameHouse("nationality", "Swede", "pet", "Dog");
 const daneDrinksTeaExpr = sameHouse("nationality", "Dane", "drink", "Tea");
 
 // The Green house is directly to the left of the White house.
-const greenDirectlyLeftOfWhiteExpr = or(
-  and(eq(Houses[0].color, "Green"), eq(Houses[1].color, "White")),
-  and(eq(Houses[1].color, "Green"), eq(Houses[2].color, "White")),
-  and(eq(Houses[2].color, "Green"), eq(Houses[3].color, "White")),
-  and(eq(Houses[3].color, "Green"), eq(Houses[4].color, "White")),
+const greenDirectlyLeftOfWhiteExpr = Arr.some(adjacentHouseIndexes, ([left, right]) =>
+  and(fieldEq(left, "color", "Green"), fieldEq(right, "color", "White"))
 );
 
 // The Green house owner drinks Coffee.

@@ -1,6 +1,6 @@
 import { expect, it } from "vitest";
 import { createZ3Compiler, z3Sorts } from "../z3.js";
-import { Schema } from "effect";
+import { Array as EffectArray, Schema } from "effect";
 import { and, eq, neq, or } from "../index.js";
 import * as Arr from "../array.js";
 import { fromEffectSchema } from "../effect.js";
@@ -15,13 +15,13 @@ export class House extends Schema.Class<House>("House")({
 
 export const Houses = fromEffectSchema("houses", Schema.Tuple([House, House, House] as const));
 
-const allColorsDifferentExpr = Arr.unique(Houses.items.map((house) => house.color));
+const allColorsDifferentExpr = Arr.unique(EffectArray.map(Houses.items, (house) => house.color));
 
-const allNationalitiesDifferentExpr = Arr.unique(Houses.items.map((house) => house.nationality));
+const allNationalitiesDifferentExpr = Arr.unique(EffectArray.map(Houses.items, (house) => house.nationality));
 
-const allAnimalsDifferentExpr = Arr.unique(Houses.items.map((house) => house.animal));
+const allAnimalsDifferentExpr = Arr.unique(EffectArray.map(Houses.items, (house) => house.animal));
 
-const allSportsDifferentExpr = Arr.unique(Houses.items.map((house) => house.sport));
+const allSportsDifferentExpr = Arr.unique(EffectArray.map(Houses.items, (house) => house.sport));
 
 // The Brazilian does not live in house two.
 const brazilianDoesNotLiveInHouseTwoExpr = neq(Houses[1].nationality, "Brazilian");
