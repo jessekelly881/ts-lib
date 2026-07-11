@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { createZ3Compiler, z3Sorts } from "./z3.js";
+import { createZ3Compiler, z3Sorts } from "../z3.js";
 import { Schema } from "effect";
-import { and, eq, neq, or } from "./index.js";
-import { fromEffectSchema } from "./effect.js";
+import { and, eq, neq, or } from "../index.js";
+import { fromEffectSchema } from "../effect.js";
 
 const Color = Schema.Literals(["Blue", "Green", "Red"]);
 const Nationality = Schema.Literals(["Australian", "Brazilian", "German"]);
