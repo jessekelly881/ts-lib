@@ -3,18 +3,29 @@ import type { Expr, Primitive, Schema } from "./index.js";
 
 export type Z3Sort = "boolean" | "string" | "number" | "int";
 
+export type Z3SortInfo = Z3Sort | {
+    readonly sort: Z3Sort;
+    readonly values?: readonly [string, ...string[]];
+};
+
 /**
  * Keys correspond to the fully qualified paths produced by ref().
  *
  * Example:
  * {
- *   "user.role": "string",
+ *   "user.role": { sort: "string", values: ["admin", "member"] },
  *   "user.orgId": "string",
  *   "project.orgId": "string",
  *   "project.active": "boolean"
  * }
  */
-export type Z3Sorts = Readonly<Record<string, Z3Sort>>;
+export type Z3Sorts = Readonly<Record<string, Z3SortInfo>>;
+
+const sortOfInfo = (info: Z3SortInfo): Z3Sort =>
+    typeof info === "string" ? info : info.sort;
+
+const enumValuesOfInfo = (info: Z3SortInfo): readonly [string, ...string[]] | undefined =>
+    typeof info === "string" ? undefined : info.values;
 
 const refKey = (expr: Extract<Expr, { _tag: "Ref" }>): string =>
     [expr.name, ...expr.path].join(".");
@@ -42,7 +53,7 @@ const scalarSort = (schema: Schema): Z3Sort | undefined => {
 const collectSorts = (
     schema: Schema,
     path: readonly string[],
-    output: Record<string, Z3Sort>,
+    output: Record<string, Z3SortInfo>,
 ): void => {
     if (schema._tag === "ObjectSchema") {
         for (const [key, value] of Object.entries(schema.fields)) {
@@ -61,15 +72,16 @@ const collectSorts = (
     const sort = scalarSort(schema);
 
     if (sort !== undefined) {
-        output[path.join(".")] = sort;
+        output[path.join(".")] = schema._tag === "EnumSchema"
+            ? { sort, values: schema.values }
+            : sort;
     }
 };
 
 export const z3Sorts = (
     schemas: Readonly<Record<string, Schema>>,
 ): Z3Sorts => {
-    const output: Record<string, Z3Sort> = {};
-
+    const output: Record<string, Z3SortInfo> = {};
     for (const [name, schema] of Object.entries(schemas)) {
         collectSorts(schema, [name], output);
     }
@@ -155,13 +167,13 @@ export const createZ3Compiler = async (sorts: Z3Sorts) => {
         expr: Extract<Expr, { _tag: "Ref" }>,
     ): Z3Sort => {
         const key = refKey(expr);
-        const sort = sorts[key];
+        const info = sorts[key];
 
-        if (sort === undefined) {
+        if (info === undefined) {
             throw new Error(`Missing Z3 sort for reference: ${key}`);
         }
 
-        return sort;
+        return sortOfInfo(info);
     };
 
     const compileRef = (
@@ -541,6 +553,24 @@ export const createZ3Compiler = async (sorts: Z3Sorts) => {
         return compileRef({ _tag: "Ref", name, path });
     };
 
+    const compileDomainConstraints = (): readonly Z3Boolean[] =>
+        Object.entries(sorts).flatMap(([key, info]) => {
+            const values = enumValuesOfInfo(info);
+
+            if (values === undefined) {
+                return [];
+            }
+
+            const value = valueForKey(key);
+            return [context.Or(...values.map((enumValue) => value.eq(context.String.val(enumValue))))];
+        });
+
+    const addModelConstraints = (solver: InstanceType<typeof context.Solver>): void => {
+        for (const constraint of compileDomainConstraints()) {
+            solver.add(constraint);
+        }
+    };
+
     return {
         context,
 
@@ -552,12 +582,14 @@ export const createZ3Compiler = async (sorts: Z3Sorts) => {
 
         solver(expr: Expr) {
             const solver = new context.Solver();
+            addModelConstraints(solver);
             solver.add(compileBoolean(expr));
             return solver;
         },
 
         async findExample(expr: Expr): Promise<Z3Example> {
             const solver = new context.Solver();
+            addModelConstraints(solver);
             solver.add(compileBoolean(expr));
 
             const status = await solver.check();
@@ -569,9 +601,9 @@ export const createZ3Compiler = async (sorts: Z3Sorts) => {
             const model = solver.model();
             const env: Record<string, unknown> = {};
 
-            for (const [key, sort] of Object.entries(sorts)) {
+            for (const [key, info] of Object.entries(sorts)) {
                 const value = model.eval(valueForKey(key), true);
-                setPath(env, key, parseModelValue(sort, value));
+                setPath(env, key, parseModelValue(sortOfInfo(info), value));
             }
 
             return { status, env };
