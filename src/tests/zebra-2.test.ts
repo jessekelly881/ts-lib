@@ -5,16 +5,11 @@ import { and, eq, neq, or } from "../index.js";
 import * as Arr from "../array.js";
 import { fromEffectSchema } from "../effect.js";
 
-const Color = Schema.Literals(["Blue", "Green", "Red"]);
-const Nationality = Schema.Literals(["Australian", "Brazilian", "German"]);
-const Animal = Schema.Literals(["Cat", "Dog", "Fish"]);
-const Sport = Schema.Literals(["Basketball", "Football", "Soccer"]);
-
 export class House extends Schema.Class<House>("House")({
-  color: Color,
-  nationality: Nationality,
-  animal: Animal,
-  sport: Sport,
+  color: Schema.Literals(["Blue", "Green", "Red"]),
+  nationality: Schema.Literals(["Australian", "Brazilian", "German"]),
+  animal: Schema.Literals(["Cat", "Dog", "Fish"]),
+  sport: Schema.Literals(["Basketball", "Football", "Soccer"]),
 }) {
 }
 

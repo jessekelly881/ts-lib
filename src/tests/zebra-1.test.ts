@@ -5,12 +5,9 @@ import * as Arr from "../array.js";
 import { fromEffectSchema } from "../effect.js";
 import { createZ3Compiler, z3Sorts } from "../z3.js";
 
-const Color = Schema.Literals(["Red", "Blue", "White"]);
-const Nationality = Schema.Literals(["Spanish", "Norwegian", "Italian"]);
-
 export class House extends Schema.Class<House>("House")({
-  color: Color,
-  nationality: Nationality,
+  color: Schema.Literals(["Red", "Blue", "White"]),
+  nationality: Schema.Literals(["Spanish", "Norwegian", "Italian"]),
 }) {
 }
 

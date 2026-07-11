@@ -5,18 +5,12 @@ import * as Arr from "../array.js";
 import { fromEffectSchema } from "../effect.js";
 import { createZ3Compiler, z3Sorts } from "../z3.js";
 
-const Color = Schema.Literals(["Blue", "Green", "Red", "White", "Yellow"]);
-const Nationality = Schema.Literals(["Brit", "Dane", "German", "Norwegian", "Swede"]);
-const Drink = Schema.Literals(["Beer", "Coffee", "Milk", "Tea", "Water"]);
-const Cigarette = Schema.Literals(["Blends", "BlueMaster", "Dunhill", "PallMall", "Prince"]);
-const Pet = Schema.Literals(["Bird", "Cat", "Dog", "Fish", "Horses"]);
-
 export class House extends Schema.Class<House>("House")({
-  color: Color,
-  nationality: Nationality,
-  drink: Drink,
-  cigarette: Cigarette,
-  pet: Pet,
+  color: Schema.Literals(["Blue", "Green", "Red", "White", "Yellow"]),
+  nationality: Schema.Literals(["Brit", "Dane", "German", "Norwegian", "Swede"]),
+  drink: Schema.Literals(["Beer", "Coffee", "Milk", "Tea", "Water"]),
+  cigarette: Schema.Literals(["Blends", "BlueMaster", "Dunhill", "PallMall", "Prince"]),
+  pet: Schema.Literals(["Bird", "Cat", "Dog", "Fish", "Horses"]),
 }) {
 }
 
