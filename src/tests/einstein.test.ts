@@ -39,23 +39,35 @@ const allCigarettesDifferentExpr = allDifferent([
 ]);
 const allPetsDifferentExpr = allDifferent([Houses[0].pet, Houses[1].pet, Houses[2].pet, Houses[3].pet, Houses[4].pet]);
 
-const sameHouse = <Field extends keyof House, Value extends House[Field]>(field: Field, value: Value, otherField: Field, otherValue: Value) => or(
-  and(eq(Houses[0][field] as never, value as never), eq(Houses[0][otherField] as never, otherValue as never)),
-  and(eq(Houses[1][field] as never, value as never), eq(Houses[1][otherField] as never, otherValue as never)),
-  and(eq(Houses[2][field] as never, value as never), eq(Houses[2][otherField] as never, otherValue as never)),
-  and(eq(Houses[3][field] as never, value as never), eq(Houses[3][otherField] as never, otherValue as never)),
-  and(eq(Houses[4][field] as never, value as never), eq(Houses[4][otherField] as never, otherValue as never)),
+const Fields = {
+  color: [Houses[0].color, Houses[1].color, Houses[2].color, Houses[3].color, Houses[4].color],
+  nationality: [Houses[0].nationality, Houses[1].nationality, Houses[2].nationality, Houses[3].nationality, Houses[4].nationality],
+  drink: [Houses[0].drink, Houses[1].drink, Houses[2].drink, Houses[3].drink, Houses[4].drink],
+  cigarette: [Houses[0].cigarette, Houses[1].cigarette, Houses[2].cigarette, Houses[3].cigarette, Houses[4].cigarette],
+  pet: [Houses[0].pet, Houses[1].pet, Houses[2].pet, Houses[3].pet, Houses[4].pet],
+};
+
+type Field = keyof typeof Fields;
+
+const fieldEq = (houseIndex: 0 | 1 | 2 | 3 | 4, field: Field, value: string) => eq(Fields[field][houseIndex], value);
+
+const sameHouse = (field: Field, value: string, otherField: Field, otherValue: string) => or(
+  and(fieldEq(0, field, value), fieldEq(0, otherField, otherValue)),
+  and(fieldEq(1, field, value), fieldEq(1, otherField, otherValue)),
+  and(fieldEq(2, field, value), fieldEq(2, otherField, otherValue)),
+  and(fieldEq(3, field, value), fieldEq(3, otherField, otherValue)),
+  and(fieldEq(4, field, value), fieldEq(4, otherField, otherValue)),
 );
 
-const nextTo = <Field extends keyof House, Value extends House[Field]>(field: Field, value: Value, otherField: Field, otherValue: Value) => or(
-  and(eq(Houses[0][field] as never, value as never), eq(Houses[1][otherField] as never, otherValue as never)),
-  and(eq(Houses[1][field] as never, value as never), eq(Houses[0][otherField] as never, otherValue as never)),
-  and(eq(Houses[1][field] as never, value as never), eq(Houses[2][otherField] as never, otherValue as never)),
-  and(eq(Houses[2][field] as never, value as never), eq(Houses[1][otherField] as never, otherValue as never)),
-  and(eq(Houses[2][field] as never, value as never), eq(Houses[3][otherField] as never, otherValue as never)),
-  and(eq(Houses[3][field] as never, value as never), eq(Houses[2][otherField] as never, otherValue as never)),
-  and(eq(Houses[3][field] as never, value as never), eq(Houses[4][otherField] as never, otherValue as never)),
-  and(eq(Houses[4][field] as never, value as never), eq(Houses[3][otherField] as never, otherValue as never)),
+const nextTo = (field: Field, value: string, otherField: Field, otherValue: string) => or(
+  and(fieldEq(0, field, value), fieldEq(1, otherField, otherValue)),
+  and(fieldEq(1, field, value), fieldEq(0, otherField, otherValue)),
+  and(fieldEq(1, field, value), fieldEq(2, otherField, otherValue)),
+  and(fieldEq(2, field, value), fieldEq(1, otherField, otherValue)),
+  and(fieldEq(2, field, value), fieldEq(3, otherField, otherValue)),
+  and(fieldEq(3, field, value), fieldEq(2, otherField, otherValue)),
+  and(fieldEq(3, field, value), fieldEq(4, otherField, otherValue)),
+  and(fieldEq(4, field, value), fieldEq(3, otherField, otherValue)),
 );
 
 // The Brit lives in the Red house.
