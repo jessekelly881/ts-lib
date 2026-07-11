@@ -1,5 +1,5 @@
 import { expect, it } from "vitest";
-import { Array as EffectArray, Schema } from "effect";
+import { Array as A, Schema } from "effect";
 import { and, eq, or } from "../index.js";
 import * as Arr from "../array.js";
 import { fromEffectSchema } from "../effect.js";
@@ -13,9 +13,9 @@ export class House extends Schema.Class<House>("House")({
 
 export const Houses = fromEffectSchema("houses", Schema.Tuple([House, House, House] as const));
 
-const allColorsDifferentExpr = Arr.unique(EffectArray.map(Houses.items, (house) => house.color));
+const allColorsDifferentExpr = Arr.unique(A.map(Houses.items, (house) => house.color));
 
-const allNationalitiesDifferentExpr = Arr.unique(EffectArray.map(Houses.items, (house) => house.nationality));
+const allNationalitiesDifferentExpr = Arr.unique(A.map(Houses.items, (house) => house.nationality));
 
 // The Spanish lives directly to the right of the Red house.
 const spanishDirectlyRightOfRedExpr = or(

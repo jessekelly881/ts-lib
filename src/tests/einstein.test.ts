@@ -1,5 +1,5 @@
 import { expect, it } from "vitest";
-import { Array as EffectArray, Schema } from "effect";
+import { Array as A, Schema } from "effect";
 import { and, eq } from "../index.js";
 import * as Arr from "../array.js";
 import { fromEffectSchema } from "../effect.js";
@@ -16,25 +16,25 @@ export class House extends Schema.Class<House>("House")({
 
 export const Houses = fromEffectSchema("houses", Schema.Tuple([House, House, House, House, House] as const));
 
-const allColorsDifferentExpr = Arr.unique(EffectArray.map(Houses.items, (house) => house.color));
-const allNationalitiesDifferentExpr = Arr.unique(EffectArray.map(Houses.items, (house) => house.nationality));
-const allDrinksDifferentExpr = Arr.unique(EffectArray.map(Houses.items, (house) => house.drink));
-const allCigarettesDifferentExpr = Arr.unique(EffectArray.map(Houses.items, (house) => house.cigarette));
-const allPetsDifferentExpr = Arr.unique(EffectArray.map(Houses.items, (house) => house.pet));
+const allColorsDifferentExpr = Arr.unique(A.map(Houses.items, (house) => house.color));
+const allNationalitiesDifferentExpr = Arr.unique(A.map(Houses.items, (house) => house.nationality));
+const allDrinksDifferentExpr = Arr.unique(A.map(Houses.items, (house) => house.drink));
+const allCigarettesDifferentExpr = Arr.unique(A.map(Houses.items, (house) => house.cigarette));
+const allPetsDifferentExpr = Arr.unique(A.map(Houses.items, (house) => house.pet));
 
-const houseIndexes = EffectArray.range(0, Houses.items.length - 1);
-const adjacentHouseIndexes = EffectArray.zip(
-  EffectArray.range(0, Houses.items.length - 2),
-  EffectArray.range(1, Houses.items.length - 1),
+const houseIndexes = A.range(0, Houses.items.length - 1);
+const adjacentHouseIndexes = A.zip(
+  A.range(0, Houses.items.length - 2),
+  A.range(1, Houses.items.length - 1),
 );
-const neighboringHouseIndexes = EffectArray.flatMap(adjacentHouseIndexes, ([left, right]) => [[left, right], [right, left]] as const);
+const neighboringHouseIndexes = A.flatMap(adjacentHouseIndexes, ([left, right]) => [[left, right], [right, left]] as const);
 
 const Fields = {
-  color: EffectArray.map(Houses.items, (house) => house.color),
-  nationality: EffectArray.map(Houses.items, (house) => house.nationality),
-  drink: EffectArray.map(Houses.items, (house) => house.drink),
-  cigarette: EffectArray.map(Houses.items, (house) => house.cigarette),
-  pet: EffectArray.map(Houses.items, (house) => house.pet),
+  color: A.map(Houses.items, (house) => house.color),
+  nationality: A.map(Houses.items, (house) => house.nationality),
+  drink: A.map(Houses.items, (house) => house.drink),
+  cigarette: A.map(Houses.items, (house) => house.cigarette),
+  pet: A.map(Houses.items, (house) => house.pet),
 };
 
 type Field = keyof typeof Fields;
