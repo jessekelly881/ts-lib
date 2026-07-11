@@ -74,7 +74,7 @@ const dogDirectlyRightOfGreenExpr = or(
 // The German lives in house three.
 const germanLivesInHouseThreeExpr = eq(Houses[2].nationality, "German");
 
-export const einsteinRiddleExpr = and(
+export const zebraTwoExpr = and(
   brazilianDoesNotLiveInHouseTwoExpr,
   dogOwnerPlaysBasketballExpr,
   footballOneHouseLeftOfRedExpr,
@@ -87,11 +87,10 @@ export const einsteinRiddleExpr = and(
   allSportsDifferentExpr,
 );
 
-describe("Einstein riddle example", () => {
-  it("finds the solution", async () => {
-    const z3 = await createZ3Compiler(z3Sorts({ houses: Houses }));
+it("zebra-2", async () => {
+  const z3 = await createZ3Compiler(z3Sorts({ houses: Houses }));
 
-    await expect(z3.findExample(einsteinRiddleExpr)).resolves.toMatchInlineSnapshot(`
+  await expect(z3.findExample(zebraTwoExpr)).resolves.toMatchInlineSnapshot(`
           {
             "env": {
               "houses": {
@@ -118,5 +117,4 @@ describe("Einstein riddle example", () => {
             "status": "sat",
           }
         `);
-  });
 });
