@@ -1,11 +1,13 @@
 import { Schema as EffectSchema } from "effect";
 import {
+    attachModelRefs,
     boolean,
     enum_,
     int,
     number,
     object,
     string,
+    tuple,
     type Expr,
     type ObjectSchema,
     type Schema,
@@ -54,13 +56,27 @@ type SortOfTs<T> = T extends string
         ? "number" | "int"
         : never;
 
-type ModelRefs<Name extends string, Root, T> = {
-    readonly [K in keyof T]: T[K] extends Record<string, unknown>
-        ? ModelRefs<Name, Root, T[K]>
-        : Expr<{ readonly [K in Name]: Root }, SortOfTs<T[K]>>;
-};
+type ModelRefs<Name extends string, Root, T> = T extends readonly [infer First, infer Second, infer Third]
+    ? readonly [
+        ModelRefs<Name, Root, First>,
+        ModelRefs<Name, Root, Second>,
+        ModelRefs<Name, Root, Third>,
+    ]
+    : T extends [infer First, infer Second, infer Third]
+      ? readonly [
+        ModelRefs<Name, Root, First>,
+        ModelRefs<Name, Root, Second>,
+        ModelRefs<Name, Root, Third>,
+      ]
+      : T extends readonly (infer Element)[]
+        ? ReadonlyArray<ModelRefs<Name, Root, Element>>
+        : T extends (infer Element)[]
+          ? ReadonlyArray<ModelRefs<Name, Root, Element>>
+          : T extends object
+            ? { readonly [K in keyof T]: ModelRefs<Name, Root, T[K]> }
+            : Expr<{ readonly [K in Name]: Root }, SortOfTs<T>>;
 
-export type EffectModel<Name extends string, S extends EffectTop> = ObjectSchema &
+export type EffectModel<Name extends string, S extends EffectTop> = Schema &
     ModelRefs<Name, EffectSchema.Schema.Type<S>, EffectSchema.Schema.Type<S>>;
 
 const unsupported = (ast: EffectAst): never => {
@@ -168,14 +184,22 @@ const fromAst = (ast: EffectAst): Schema => {
             return object(fields);
         }
 
+        case "Arrays": {
+            if (ast.rest.length > 0) {
+                throw new Error("Effect tuple rest elements are not supported yet");
+            }
+
+            return tuple(ast.elements.map((element: EffectAst) => fromAst(element)));
+        }
+
         default:
             return unsupported(ast);
     }
 };
 
-export function fromEffectSchema<S extends EffectTop>(schema: S): ObjectSchema;
-export function fromEffectSchema<Name extends string, S extends EffectTop>(name: Name, schema: S): EffectModel<Name, S>;
-export function fromEffectSchema<Name extends string, S extends EffectTop>(
+export function fromEffectSchema<const S extends EffectTop>(schema: S): ObjectSchema;
+export function fromEffectSchema<const Name extends string, const S extends EffectTop>(name: Name, schema: S): EffectModel<Name, S>;
+export function fromEffectSchema<const Name extends string, const S extends EffectTop>(
     nameOrSchema: Name | S,
     maybeSchema?: S,
 ): ObjectSchema | EffectModel<Name, S> {
@@ -188,9 +212,17 @@ export function fromEffectSchema<Name extends string, S extends EffectTop>(
 
     const model = fromAst(schema.ast);
 
-    if (model._tag !== "ObjectSchema") {
-        throw new Error("Expected an Effect object schema at the model root");
+    if (model._tag !== "ObjectSchema" && model._tag !== "TupleSchema") {
+        throw new Error("Expected an Effect object or tuple schema at the model root");
     }
 
-    return name === undefined ? model : object(name, model.fields) as EffectModel<Name, S>;
+    if (name === undefined) {
+        if (model._tag !== "ObjectSchema") {
+            throw new Error("Expected an Effect object schema at the unnamed model root");
+        }
+
+        return model;
+    }
+
+    return attachModelRefs(model, name) as EffectModel<Name, S>;
 }

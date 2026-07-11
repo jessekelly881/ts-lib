@@ -1,144 +1,90 @@
 import { Schema } from "effect";
-import {
-    and,
-    between,
-    concat,
-    contains,
-    endsWith,
-    eq,
-    gte,
-    implies,
-    intLit,
-    lit,
-    nor,
-    not,
-    oneOf,
-    or,
-    startsWith,
-    substring,
-} from "./index.js";
-import { fromEffectSchema, modelType } from "./effect.js";
+import { and, eq, neq, or } from "./index.js";
+import { fromEffectSchema } from "./effect.js";
 import { toPredicate } from "./run.js";
 
-export class User extends Schema.Class<User>("User")({
-    id: Schema.String,
-    role: Schema.Literals(["guest", "member", "admin", "auditor"]),
-    orgId: Schema.String,
-    suspended: Schema.Boolean,
-    age: Schema.Number.pipe(modelType("int")),
-    clearance: Schema.Number.pipe(modelType("int")),
-    email: Schema.String,
-    account: Schema.Struct({
-        id: Schema.String,
-        disabled: Schema.Boolean,
-        plan: Schema.Literals(["free", "team", "enterprise"]),
-    }),
+const Color = Schema.Literals(["Blue", "Green", "Red"]);
+const Nationality = Schema.Literals(["Australian", "Brazilian", "German"]);
+const Animal = Schema.Literals(["Cat", "Dog", "Fish"]);
+const Sport = Schema.Literals(["Basketball", "Football", "Soccer"]);
+
+export class House extends Schema.Class<House>("House")({
+    color: Color,
+    nationality: Nationality,
+    animal: Animal,
+    sport: Sport,
 }) {
 }
 
-export class Document extends Schema.Class<Document>("Document")({
-    orgId: Schema.String,
-    ownerId: Schema.String,
-    title: Schema.String,
-    slug: Schema.String,
-    visibility: Schema.Literals(["private", "org", "public"]),
-    status: Schema.Literals(["draft", "published", "archived"]),
-    locked: Schema.Boolean,
-    retentionHold: Schema.Boolean,
-    sensitivity: Schema.Number.pipe(modelType("int")),
-}) {
-}
+export const Houses = fromEffectSchema("houses", Schema.Tuple([House, House, House] as const));
 
-export class Request extends Schema.Class<Request>("Request")({
-    userId: Schema.String,
-    action: Schema.Literals(["read", "write", "delete"]),
-    mfa: Schema.Boolean,
-    justification: Schema.String,
-}) {
-}
 
-export class PolicyConfig extends Schema.Class<PolicyConfig>("PolicyConfig")({
-    mfaThreshold: Schema.Number.pipe(modelType("int")),
-    minimumClearance: Schema.Number.pipe(modelType("int")),
-    requireEnterpriseForDelete: Schema.Boolean,
-}) {
-}
-
-export const ObjUser = fromEffectSchema("user", User);
-export const ObjDocument = fromEffectSchema("document", Document);
-export const ObjRequest = fromEffectSchema("request", Request);
-export const ObjPolicyConfig = fromEffectSchema("policy", PolicyConfig);
-
-const userIsActiveExpr = nor(
-    eq(ObjUser.suspended, lit(true)),
-    eq(ObjUser.account.disabled, lit(true)),
+const allColorsDifferentExpr = and(
+    neq(Houses[0].color, Houses[1].color),
+    neq(Houses[0].color, Houses[2].color),
+    neq(Houses[1].color, Houses[2].color),
 );
 
-const userIsEligibleEmployeeExpr = and(
-    userIsActiveExpr,
-    between(ObjUser.age, lit(18), lit(120)),
-    endsWith(ObjUser.email, lit("@example.com")),
+const allNationalitiesDifferentExpr = and(
+    neq(Houses[0].nationality, Houses[1].nationality),
+    neq(Houses[0].nationality, Houses[2].nationality),
+    neq(Houses[1].nationality, Houses[2].nationality),
 );
 
-const documentIsEligibleForAccessExpr = and(
-    oneOf(ObjDocument.status, ["published"]),
-    contains(ObjDocument.title, lit("policy")),
-    gte(ObjUser.clearance, ObjDocument.sensitivity),
+const allAnimalsDifferentExpr = and(
+    neq(Houses[0].animal, Houses[1].animal),
+    neq(Houses[0].animal, Houses[2].animal),
+    neq(Houses[1].animal, Houses[2].animal),
 );
 
-const userCanSeeDocumentExpr = or(
-    eq(ObjDocument.visibility, lit("org")),
-    and(
-        eq(ObjDocument.visibility, lit("public")),
-        startsWith(ObjDocument.slug, concat(lit("docs"), lit("/"))),
-        eq(substring(ObjDocument.slug, intLit(0), intLit(5)), lit("docs/")),
-        between(ObjDocument.sensitivity, lit(0), lit(2)),
-    ),
-    and(
-        eq(ObjDocument.visibility, lit("private")),
-        eq(ObjDocument.ownerId, ObjRequest.userId),
-    ),
-    and(
-        eq(ObjUser.role, lit("auditor")),
-        contains(ObjRequest.justification, lit("audit")),
-    ),
+const allSportsDifferentExpr = and(
+    neq(Houses[0].sport, Houses[1].sport),
+    neq(Houses[0].sport, Houses[2].sport),
+    neq(Houses[1].sport, Houses[2].sport),
 );
 
-const requestSatisfiesActionPolicyExpr = and(
-    implies(
-        eq(ObjRequest.action, lit("write")),
-        not(eq(ObjDocument.locked, lit(true))),
-    ),
-    implies(
-        eq(ObjRequest.action, lit("delete")),
-        and(
-            eq(ObjUser.role, lit("admin")),
-            eq(ObjRequest.mfa, lit(true)),
-            not(eq(ObjDocument.retentionHold, lit(true))),
-        ),
-    ),
-    implies(
-        gte(ObjDocument.sensitivity, lit(4)),
-        eq(ObjRequest.mfa, lit(true)),
-    ),
+// The Brazilian does not live in house two.
+const brazilianDoesNotLiveInHouseTwoExpr = neq(Houses[1].nationality, "Brazilian");
+
+// The person with the Dogs plays Basketball.
+const dogOwnerPlaysBasketballExpr = or(
+    and(eq(Houses[0].animal, "Dog"), eq(Houses[0].sport, "Basketball")),
+    and(eq(Houses[1].animal, "Dog"), eq(Houses[1].sport, "Basketball")),
+    and(eq(Houses[2].animal, "Dog"), eq(Houses[2].sport, "Basketball")),
 );
 
-const userHasAccessPathExpr = or(
-    and(
-        eq(ObjUser.role, lit("admin")),
-        eq(ObjUser.account.plan, lit("enterprise")),
-    ),
-    and(
-        eq(ObjDocument.orgId, ObjUser.orgId),
-        userCanSeeDocumentExpr,
-    ),
+// There is one house between the house of the person who plays Football and the Red house on the right.
+const footballOneHouseLeftOfRedExpr = and(
+    eq(Houses[0].sport, "Football"),
+    eq(Houses[2].color, "Red"),
 );
 
-export const canAccessDocumentExpr = and(
-    userIsEligibleEmployeeExpr,
-    documentIsEligibleForAccessExpr,
-    requestSatisfiesActionPolicyExpr,
-    userHasAccessPathExpr,
+// The person with the Fishes lives directly to the left of the person with the Cats.
+const fishDirectlyLeftOfCatExpr = or(
+    and(eq(Houses[0].animal, "Fish"), eq(Houses[1].animal, "Cat")),
+    and(eq(Houses[1].animal, "Fish"), eq(Houses[2].animal, "Cat")),
 );
 
-export const canAccessDocument = toPredicate(canAccessDocumentExpr);
+// The person with the Dogs lives directly to the right of the Green house.
+const dogDirectlyRightOfGreenExpr = or(
+    and(eq(Houses[0].color, "Green"), eq(Houses[1].animal, "Dog")),
+    and(eq(Houses[1].color, "Green"), eq(Houses[2].animal, "Dog")),
+);
+
+// The German lives in house three.
+const germanLivesInHouseThreeExpr = eq(Houses[2].nationality, "German");
+
+export const einsteinRiddleExpr = and(
+    brazilianDoesNotLiveInHouseTwoExpr,
+    dogOwnerPlaysBasketballExpr,
+    footballOneHouseLeftOfRedExpr,
+    fishDirectlyLeftOfCatExpr,
+    dogDirectlyRightOfGreenExpr,
+    germanLivesInHouseThreeExpr,
+    allColorsDifferentExpr,
+    allNationalitiesDifferentExpr,
+    allAnimalsDifferentExpr,
+    allSportsDifferentExpr,
+);
+
+export const isEinsteinRiddleSolution = toPredicate(einsteinRiddleExpr);

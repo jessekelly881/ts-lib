@@ -34,6 +34,7 @@ const scalarSort = (schema: Schema): Z3Sort | undefined => {
         case "IntSchema":
             return "int";
         case "ObjectSchema":
+        case "TupleSchema":
             return undefined;
     }
 };
@@ -46,6 +47,13 @@ const collectSorts = (
     if (schema._tag === "ObjectSchema") {
         for (const [key, value] of Object.entries(schema.fields)) {
             collectSorts(value, [...path, key], output);
+        }
+        return;
+    }
+
+    if (schema._tag === "TupleSchema") {
+        for (const [index, value] of schema.elements.entries()) {
+            collectSorts(value, [...path, String(index)], output);
         }
         return;
     }

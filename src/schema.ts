@@ -14,7 +14,12 @@ export interface ObjectSchema<Fields extends Readonly<Record<string, Schema>> = 
     readonly fields: Fields;
 }
 
-export type Schema = ScalarSchema | ObjectSchema;
+export interface TupleSchema<Elements extends readonly Schema[] = readonly Schema[]> {
+    readonly _tag: "TupleSchema";
+    readonly elements: Elements;
+}
+
+export type Schema = ScalarSchema | ObjectSchema | TupleSchema;
 
 type SortOfSchema<S extends Schema> = S extends { readonly _tag: "StringSchema" }
     ? "string"
@@ -28,10 +33,18 @@ type SortOfSchema<S extends Schema> = S extends { readonly _tag: "StringSchema" 
             ? "string"
             : ExprSort;
 
+export type SchemaModel<S extends Schema, A = unknown> = S extends ObjectSchema<infer Fields>
+    ? ObjectModel<Fields, A>
+    : S extends TupleSchema<infer Elements>
+      ? TupleModel<Elements, A>
+      : Expr<A, SortOfSchema<S>>;
+
 export type ObjectModel<Fields extends Readonly<Record<string, Schema>>, A = unknown> = ObjectSchema<Fields> & {
-    readonly [K in keyof Fields]: Fields[K] extends ObjectSchema<infer NestedFields>
-        ? ObjectModel<NestedFields, A>
-        : Expr<A, SortOfSchema<Fields[K]>>;
+    readonly [K in keyof Fields]: SchemaModel<Fields[K], A>;
+};
+
+export type TupleModel<Elements extends readonly Schema[], A = unknown> = TupleSchema<Elements> & {
+    readonly [K in keyof Elements]: Elements[K] extends Schema ? SchemaModel<Elements[K], A> : Elements[K];
 };
 
 export type InferSchema<S extends Schema> = S extends { readonly _tag: "StringSchema" }
@@ -46,7 +59,9 @@ export type InferSchema<S extends Schema> = S extends { readonly _tag: "StringSc
           ? Values[number]
           : S extends { readonly _tag: "ObjectSchema"; readonly fields: infer Fields extends Readonly<Record<string, Schema>> }
             ? { readonly [K in keyof Fields]: InferSchema<Fields[K]> }
-            : never;
+            : S extends { readonly _tag: "TupleSchema"; readonly elements: infer Elements extends readonly Schema[] }
+              ? { readonly [K in keyof Elements]: InferSchema<Elements[K]> }
+              : never;
 
 export const string = (): ScalarSchema => ({ _tag: "StringSchema" });
 
@@ -65,26 +80,40 @@ export const enum_ = <Values extends readonly [string, ...string[]]>(
 
 export { enum_ as enum };
 
+export const tuple = <Elements extends readonly Schema[]>(
+    elements: Elements,
+): TupleSchema<Elements> => ({
+    _tag: "TupleSchema",
+    elements,
+});
+
 const refFromParts = <A, S extends ExprSort>(name: string, path: readonly string[]): Expr<A, S> => ({
     _tag: "Ref",
     name,
     path,
 });
 
-const attachRefs = <Fields extends Readonly<Record<string, Schema>>, A = unknown>(
-    schema: ObjectSchema<Fields>,
+const attachRefsInternal = (
+    schema: Schema,
     name: string,
     path: readonly string[] = [],
-): ObjectModel<Fields, A> => {
-    const model = schema as ObjectModel<Fields, A>;
+): unknown => {
+    if (schema._tag !== "ObjectSchema" && schema._tag !== "TupleSchema") {
+        return refFromParts(name, path);
+    }
 
-    for (const [key, field] of Object.entries(schema.fields)) {
+    const model = schema as unknown;
+    const entries = schema._tag === "ObjectSchema"
+        ? Object.entries(schema.fields)
+        : schema.elements.map((field, index) => [String(index), field] as const);
+
+    for (const [key, field] of entries) {
         Object.defineProperty(model, key, {
             enumerable: true,
             configurable: false,
             value:
-                field._tag === "ObjectSchema"
-                    ? attachRefs(field, name, [...path, key])
+                field._tag === "ObjectSchema" || field._tag === "TupleSchema"
+                    ? attachRefsInternal(field, name, [...path, key])
                     : refFromParts(name, [...path, key]),
         });
     }
@@ -92,17 +121,23 @@ const attachRefs = <Fields extends Readonly<Record<string, Schema>>, A = unknown
     return model;
 };
 
+export const attachModelRefs = (
+    schema: Schema,
+    name: string,
+    path: readonly string[] = [],
+): unknown => attachRefsInternal(schema, name, path);
+
 export function object<Fields extends Readonly<Record<string, Schema>>>(
     fields: Fields,
 ): ObjectSchema<Fields>;
 export function object<Fields extends Readonly<Record<string, Schema>>>(
     name: string,
     fields: Fields,
-): ObjectModel<Fields>;
+): ObjectSchema<Fields>;
 export function object<Fields extends Readonly<Record<string, Schema>>>(
     nameOrFields: string | Fields,
     maybeFields?: Fields,
-): ObjectSchema<Fields> | ObjectModel<Fields> {
+): ObjectSchema<Fields> {
     const name = typeof nameOrFields === "string" ? nameOrFields : undefined;
     const fields = typeof nameOrFields === "string" ? maybeFields : nameOrFields;
 
@@ -115,6 +150,6 @@ export function object<Fields extends Readonly<Record<string, Schema>>>(
         fields,
     };
 
-    return name === undefined ? schema : attachRefs(schema, name);
+    return name === undefined ? schema : attachModelRefs(schema, name) as ObjectSchema<Fields>;
 }
 
