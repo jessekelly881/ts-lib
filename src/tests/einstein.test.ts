@@ -22,23 +22,11 @@ export class House extends Schema.Class<House>("House")({
 
 export const Houses = fromEffectSchema("houses", Schema.Tuple([House, House, House, House, House] as const));
 
-const allColorsDifferentExpr = Arr.unique([Houses[0].color, Houses[1].color, Houses[2].color, Houses[3].color, Houses[4].color]);
-const allNationalitiesDifferentExpr = Arr.unique([
-  Houses[0].nationality,
-  Houses[1].nationality,
-  Houses[2].nationality,
-  Houses[3].nationality,
-  Houses[4].nationality,
-]);
-const allDrinksDifferentExpr = Arr.unique([Houses[0].drink, Houses[1].drink, Houses[2].drink, Houses[3].drink, Houses[4].drink]);
-const allCigarettesDifferentExpr = Arr.unique([
-  Houses[0].cigarette,
-  Houses[1].cigarette,
-  Houses[2].cigarette,
-  Houses[3].cigarette,
-  Houses[4].cigarette,
-]);
-const allPetsDifferentExpr = Arr.unique([Houses[0].pet, Houses[1].pet, Houses[2].pet, Houses[3].pet, Houses[4].pet]);
+const allColorsDifferentExpr = Arr.unique(Houses.items.map((house) => house.color));
+const allNationalitiesDifferentExpr = Arr.unique(Houses.items.map((house) => house.nationality));
+const allDrinksDifferentExpr = Arr.unique(Houses.items.map((house) => house.drink));
+const allCigarettesDifferentExpr = Arr.unique(Houses.items.map((house) => house.cigarette));
+const allPetsDifferentExpr = Arr.unique(Houses.items.map((house) => house.pet));
 
 const Fields = {
   color: [Houses[0].color, Houses[1].color, Houses[2].color, Houses[3].color, Houses[4].color],

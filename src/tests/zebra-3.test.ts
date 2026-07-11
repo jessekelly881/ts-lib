@@ -20,15 +20,10 @@ export class House extends Schema.Class<House>("House")({
 
 export const Houses = fromEffectSchema("houses", Schema.Tuple([House, House, House, House] as const));
 
-const allColorsDifferentExpr = Arr.unique([Houses[0].color, Houses[1].color, Houses[2].color, Houses[3].color]);
-const allNationalitiesDifferentExpr = Arr.unique([
-  Houses[0].nationality,
-  Houses[1].nationality,
-  Houses[2].nationality,
-  Houses[3].nationality,
-]);
-const allAnimalsDifferentExpr = Arr.unique([Houses[0].animal, Houses[1].animal, Houses[2].animal, Houses[3].animal]);
-const allSportsDifferentExpr = Arr.unique([Houses[0].sport, Houses[1].sport, Houses[2].sport, Houses[3].sport]);
+const allColorsDifferentExpr = Arr.unique(Houses.items.map((house) => house.color));
+const allNationalitiesDifferentExpr = Arr.unique(Houses.items.map((house) => house.nationality));
+const allAnimalsDifferentExpr = Arr.unique(Houses.items.map((house) => house.animal));
+const allSportsDifferentExpr = Arr.unique(Houses.items.map((house) => house.sport));
 
 // There are two houses between the person who likes Bowling and the person who likes Swimming.
 const bowlingTwoHousesFromSwimmingExpr = or(

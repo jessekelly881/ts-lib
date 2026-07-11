@@ -43,8 +43,12 @@ export type ObjectModel<Fields extends Readonly<Record<string, Schema>>, A = unk
     readonly [K in keyof Fields]: SchemaModel<Fields[K], A>;
 };
 
-export type TupleModel<Elements extends readonly Schema[], A = unknown> = TupleSchema<Elements> & {
+export type TupleModelItems<Elements extends readonly Schema[], A = unknown> = {
     readonly [K in keyof Elements]: Elements[K] extends Schema ? SchemaModel<Elements[K], A> : Elements[K];
+};
+
+export type TupleModel<Elements extends readonly Schema[], A = unknown> = TupleSchema<Elements> & TupleModelItems<Elements, A> & {
+    readonly items: TupleModelItems<Elements, A>;
 };
 
 export type InferSchema<S extends Schema> = S extends { readonly _tag: "StringSchema" }
@@ -115,6 +119,14 @@ const attachRefsInternal = (
                 field._tag === "ObjectSchema" || field._tag === "TupleSchema"
                     ? attachRefsInternal(field, name, [...path, key])
                     : refFromParts(name, [...path, key]),
+        });
+    }
+
+    if (schema._tag === "TupleSchema") {
+        Object.defineProperty(model, "items", {
+            enumerable: false,
+            configurable: false,
+            value: schema.elements.map((_, index) => (model as Record<string, unknown>)[String(index)]),
         });
     }
 

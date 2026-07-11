@@ -16,9 +16,9 @@ export class House extends Schema.Class<House>("House")({
 
 export const Houses = fromEffectSchema("houses", Schema.Tuple([House, House, House] as const));
 
-const allColorsDifferentExpr = Arr.unique([Houses[0].color, Houses[1].color, Houses[2].color]);
+const allColorsDifferentExpr = Arr.unique(Houses.items.map((house) => house.color));
 
-const allNationalitiesDifferentExpr = Arr.unique([Houses[0].nationality, Houses[1].nationality, Houses[2].nationality]);
+const allNationalitiesDifferentExpr = Arr.unique(Houses.items.map((house) => house.nationality));
 
 // The Spanish lives directly to the right of the Red house.
 const spanishDirectlyRightOfRedExpr = or(

@@ -56,22 +56,44 @@ type SortOfTs<T> = T extends string
         ? "number" | "int"
         : never;
 
-type ModelRefs<Name extends string, Root, T> = T extends readonly [infer First, infer Second, infer Third]
+type ModelRefs<Name extends string, Root, T> = T extends readonly [infer A, infer B, infer C, infer D, infer E]
     ? readonly [
-        ModelRefs<Name, Root, First>,
-        ModelRefs<Name, Root, Second>,
-        ModelRefs<Name, Root, Third>,
-    ]
-    : T extends [infer First, infer Second, infer Third]
+        ModelRefs<Name, Root, A>,
+        ModelRefs<Name, Root, B>,
+        ModelRefs<Name, Root, C>,
+        ModelRefs<Name, Root, D>,
+        ModelRefs<Name, Root, E>,
+    ] & { readonly items: readonly [
+        ModelRefs<Name, Root, A>,
+        ModelRefs<Name, Root, B>,
+        ModelRefs<Name, Root, C>,
+        ModelRefs<Name, Root, D>,
+        ModelRefs<Name, Root, E>,
+    ] }
+    : T extends readonly [infer A, infer B, infer C, infer D]
       ? readonly [
-        ModelRefs<Name, Root, First>,
-        ModelRefs<Name, Root, Second>,
-        ModelRefs<Name, Root, Third>,
-      ]
-      : T extends readonly (infer Element)[]
-        ? ReadonlyArray<ModelRefs<Name, Root, Element>>
-        : T extends (infer Element)[]
-          ? ReadonlyArray<ModelRefs<Name, Root, Element>>
+        ModelRefs<Name, Root, A>,
+        ModelRefs<Name, Root, B>,
+        ModelRefs<Name, Root, C>,
+        ModelRefs<Name, Root, D>,
+      ] & { readonly items: readonly [
+        ModelRefs<Name, Root, A>,
+        ModelRefs<Name, Root, B>,
+        ModelRefs<Name, Root, C>,
+        ModelRefs<Name, Root, D>,
+      ] }
+      : T extends readonly [infer A, infer B, infer C]
+        ? readonly [
+        ModelRefs<Name, Root, A>,
+        ModelRefs<Name, Root, B>,
+        ModelRefs<Name, Root, C>,
+        ] & { readonly items: readonly [
+        ModelRefs<Name, Root, A>,
+        ModelRefs<Name, Root, B>,
+        ModelRefs<Name, Root, C>,
+        ] }
+        : T extends readonly (infer Element)[]
+          ? ReadonlyArray<ModelRefs<Name, Root, Element>> & { readonly items: ReadonlyArray<ModelRefs<Name, Root, Element>> }
           : T extends object
             ? { readonly [K in keyof T]: ModelRefs<Name, Root, T[K]> }
             : Expr<{ readonly [K in Name]: Root }, SortOfTs<T>>;
