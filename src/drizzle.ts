@@ -3,6 +3,110 @@ import type { Expr, Primitive } from "./ast.js";
 
 export type DrizzleColumns = Readonly<Record<string, unknown>>;
 
+export type DrizzleColumnNaming = "camel" | "prefixCamel";
+
+export type DrizzleColumnsOptions = {
+    readonly naming?: DrizzleColumnNaming;
+    readonly overrides?: DrizzleColumns;
+};
+
+const capitalize = (value: string): string =>
+    value.length === 0 ? value : `${value[0]?.toUpperCase()}${value.slice(1)}`;
+
+const camel = (parts: readonly string[]): string =>
+    parts.map((part, index) => index === 0 ? part : capitalize(part)).join("");
+
+const columnProperty = (
+    modelName: string,
+    path: readonly string[],
+    naming: DrizzleColumnNaming,
+): string => {
+    switch (naming) {
+        case "camel":
+            return camel(path);
+        case "prefixCamel":
+            return camel([modelName, ...path]);
+    }
+};
+
+const collectModelColumns = (
+    modelName: string,
+    schema: { readonly fields: Readonly<Record<string, unknown>> },
+    table: Record<string, unknown>,
+    naming: DrizzleColumnNaming,
+    output: Record<string, unknown>,
+    path: readonly string[] = [],
+): void => {
+    for (const [fieldName, field] of Object.entries(schema.fields)) {
+        const nextPath = [...path, fieldName];
+
+        if (
+            typeof field === "object" &&
+            field !== null &&
+            "_tag" in field &&
+            field._tag === "ObjectSchema" &&
+            "fields" in field
+        ) {
+            collectModelColumns(
+                modelName,
+                field as { readonly fields: Readonly<Record<string, unknown>> },
+                table,
+                naming,
+                output,
+                nextPath,
+            );
+            continue;
+        }
+
+        const property = columnProperty(modelName, nextPath, naming);
+        const column = table[property];
+
+        if (column !== undefined) {
+            output[[modelName, ...nextPath].join(".")] = column;
+        }
+    }
+};
+
+type ModelWithFields = { readonly fields: Readonly<Record<string, unknown>> };
+type ModelTables = Readonly<Record<string, readonly [ModelWithFields, object]>>;
+type Models = Readonly<Record<string, ModelWithFields>>;
+
+export function drizzleColumns<Definitions extends ModelTables>(
+    definitions: Definitions,
+    options?: DrizzleColumnsOptions,
+): DrizzleColumns;
+export function drizzleColumns<Table extends object, Definitions extends Models>(
+    table: Table,
+    definitions: Definitions,
+    options?: DrizzleColumnsOptions,
+): DrizzleColumns;
+export function drizzleColumns(
+    tableOrDefinitions: object,
+    definitionsOrOptions: Models | DrizzleColumnsOptions = {},
+    maybeOptions: DrizzleColumnsOptions = {},
+): DrizzleColumns {
+    const hasSharedTable = Object.values(tableOrDefinitions).some(
+        (value) => !Array.isArray(value),
+    );
+    const definitions = hasSharedTable
+        ? Object.fromEntries(
+            Object.entries(definitionsOrOptions as Models).map(([name, model]) => [
+                name,
+                [model, tableOrDefinitions],
+            ]),
+        ) as ModelTables
+        : tableOrDefinitions as ModelTables;
+    const options = hasSharedTable ? maybeOptions : definitionsOrOptions as DrizzleColumnsOptions;
+    const naming = options.naming ?? "camel";
+    const output: Record<string, unknown> = { ...(options.overrides ?? {}) };
+
+    for (const [modelName, [model, table]] of Object.entries(definitions)) {
+        collectModelColumns(modelName, model, table as Record<string, unknown>, naming, output);
+    }
+
+    return output;
+}
+
 const columnKey = (expr: Extract<Expr, { _tag: "Ref" }>): string =>
     [expr.name, ...expr.path].join(".");
 

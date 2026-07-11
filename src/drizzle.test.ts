@@ -4,7 +4,7 @@ import pg from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { GenericContainer, type StartedTestContainer } from "testcontainers";
 import { ObjDocument, ObjRequest, ObjUser, canAccessDocument, canAccessDocumentExpr } from "./example.js";
-import { toDrizzleSql } from "./drizzle.js";
+import { drizzleColumns, toDrizzleSql } from "./drizzle.js";
 
 const rows = pgTable("policy_rows", {
     id: serial("id").primaryKey(),
@@ -33,31 +33,11 @@ const rows = pgTable("policy_rows", {
     requestJustification: text("request_justification").notNull(),
 });
 
-const columns = {
-    "user.id": rows.userId,
-    "user.role": rows.userRole,
-    "user.orgId": rows.userOrgId,
-    "user.suspended": rows.userSuspended,
-    "user.age": rows.userAge,
-    "user.clearance": rows.userClearance,
-    "user.email": rows.userEmail,
-    "user.account.id": rows.userAccountId,
-    "user.account.disabled": rows.userAccountDisabled,
-    "user.account.plan": rows.userAccountPlan,
-    "document.orgId": rows.documentOrgId,
-    "document.ownerId": rows.documentOwnerId,
-    "document.title": rows.documentTitle,
-    "document.slug": rows.documentSlug,
-    "document.visibility": rows.documentVisibility,
-    "document.status": rows.documentStatus,
-    "document.locked": rows.documentLocked,
-    "document.retentionHold": rows.documentRetentionHold,
-    "document.sensitivity": rows.documentSensitivity,
-    "request.userId": rows.requestUserId,
-    "request.action": rows.requestAction,
-    "request.mfa": rows.requestMfa,
-    "request.justification": rows.requestJustification,
-};
+const columns = drizzleColumns(rows, {
+    user: ObjUser,
+    document: ObjDocument,
+    request: ObjRequest,
+}, { naming: "prefixCamel" });
 
 type Env = Parameters<typeof canAccessDocument>[0];
 
