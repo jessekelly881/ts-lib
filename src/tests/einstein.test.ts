@@ -34,24 +34,15 @@ type Field = keyof typeof Fields;
 
 const fieldEq = (houseIndex: 0 | 1 | 2 | 3 | 4, field: Field, value: string) => eq(Fields[field][houseIndex], value);
 
-const sameHouse = (field: Field, value: string, otherField: Field, otherValue: string) => or(
-  and(fieldEq(0, field, value), fieldEq(0, otherField, otherValue)),
-  and(fieldEq(1, field, value), fieldEq(1, otherField, otherValue)),
-  and(fieldEq(2, field, value), fieldEq(2, otherField, otherValue)),
-  and(fieldEq(3, field, value), fieldEq(3, otherField, otherValue)),
-  and(fieldEq(4, field, value), fieldEq(4, otherField, otherValue)),
-);
+const sameHouse = (field: Field, value: string, otherField: Field, otherValue: string) =>
+  Arr.some([0, 1, 2, 3, 4] as const, (index) =>
+    and(fieldEq(index, field, value), fieldEq(index, otherField, otherValue))
+  );
 
-const nextTo = (field: Field, value: string, otherField: Field, otherValue: string) => or(
-  and(fieldEq(0, field, value), fieldEq(1, otherField, otherValue)),
-  and(fieldEq(1, field, value), fieldEq(0, otherField, otherValue)),
-  and(fieldEq(1, field, value), fieldEq(2, otherField, otherValue)),
-  and(fieldEq(2, field, value), fieldEq(1, otherField, otherValue)),
-  and(fieldEq(2, field, value), fieldEq(3, otherField, otherValue)),
-  and(fieldEq(3, field, value), fieldEq(2, otherField, otherValue)),
-  and(fieldEq(3, field, value), fieldEq(4, otherField, otherValue)),
-  and(fieldEq(4, field, value), fieldEq(3, otherField, otherValue)),
-);
+const nextTo = (field: Field, value: string, otherField: Field, otherValue: string) =>
+  Arr.some([[0, 1], [1, 0], [1, 2], [2, 1], [2, 3], [3, 2], [3, 4], [4, 3]] as const, ([index, otherIndex]) =>
+    and(fieldEq(index, field, value), fieldEq(otherIndex, otherField, otherValue))
+  );
 
 // The Brit lives in the Red house.
 const britLivesInRedExpr = sameHouse("nationality", "Brit", "color", "Red");

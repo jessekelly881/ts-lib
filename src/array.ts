@@ -1,5 +1,5 @@
 import type { BooleanInput, EnvOfInputs, Expr, ExprInput, Simplify } from "./ast.js";
-import { and, neq, or } from "./predicate.js";
+import { and, eq, neq, or } from "./predicate.js";
 
 export const unique = <Items extends readonly ExprInput[]>(
     items: Items,
@@ -10,12 +10,59 @@ export const unique = <Items extends readonly ExprInput[]>(
         ),
     ) as Expr<Simplify<EnvOfInputs<Items>>, "boolean">;
 
-export const some = <Items extends readonly unknown[]>(
+export function some<Item>(
+    predicate: (item: Item, index: number) => BooleanInput,
+): (items: readonly Item[]) => Expr<unknown, "boolean">;
+export function some<Items extends readonly unknown[]>(
     items: Items,
     predicate: (item: Items[number], index: number) => BooleanInput,
-): Expr<unknown, "boolean"> => or(...items.map(predicate));
+): Expr<unknown, "boolean">;
+export function some<Items extends readonly unknown[]>(
+    itemsOrPredicate: Items | ((item: Items[number], index: number) => BooleanInput),
+    maybePredicate?: (item: Items[number], index: number) => BooleanInput,
+): Expr<unknown, "boolean"> | ((items: Items) => Expr<unknown, "boolean">) {
+    if (typeof itemsOrPredicate === "function") {
+        return (items: Items) => some(items, itemsOrPredicate);
+    }
 
-export const every = <Items extends readonly unknown[]>(
+    return or(...itemsOrPredicate.map(maybePredicate!));
+}
+
+export function every<Item>(
+    predicate: (item: Item, index: number) => BooleanInput,
+): (items: readonly Item[]) => Expr<unknown, "boolean">;
+export function every<Items extends readonly unknown[]>(
     items: Items,
     predicate: (item: Items[number], index: number) => BooleanInput,
-): Expr<unknown, "boolean"> => and(...items.map(predicate));
+): Expr<unknown, "boolean">;
+export function every<Items extends readonly unknown[]>(
+    itemsOrPredicate: Items | ((item: Items[number], index: number) => BooleanInput),
+    maybePredicate?: (item: Items[number], index: number) => BooleanInput,
+): Expr<unknown, "boolean"> | ((items: Items) => Expr<unknown, "boolean">) {
+    if (typeof itemsOrPredicate === "function") {
+        return (items: Items) => every(items, itemsOrPredicate);
+    }
+
+    return and(...itemsOrPredicate.map(maybePredicate!));
+}
+
+export function contains<Value extends ExprInput>(
+    value: Value,
+): <Items extends readonly ExprInput[]>(items: Items) => Expr<Simplify<EnvOfInputs<Items>>, "boolean">;
+export function contains<Items extends readonly ExprInput[], Value extends ExprInput>(
+    items: Items,
+    value: Value,
+): Expr<Simplify<EnvOfInputs<Items>>, "boolean">;
+export function contains<Items extends readonly ExprInput[], Value extends ExprInput>(
+    itemsOrValue: Items | Value,
+    maybeValue?: Value,
+): Expr<Simplify<EnvOfInputs<Items>>, "boolean"> | ((items: Items) => Expr<Simplify<EnvOfInputs<Items>>, "boolean">) {
+    if (maybeValue === undefined) {
+        return (items: Items) => contains(items, itemsOrValue as Value);
+    }
+
+    return or(...(itemsOrValue as Items).map((item) => eq(item as never, maybeValue as never))) as Expr<
+        Simplify<EnvOfInputs<Items>>,
+        "boolean"
+    >;
+}
