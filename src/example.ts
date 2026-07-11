@@ -33,7 +33,8 @@ export class User extends Schema.Class<User>("User")({
         disabled: Schema.Boolean,
         plan: Schema.Literals(["free", "team", "enterprise"]),
     }),
-}) {}
+}) {
+}
 
 export class Document extends Schema.Class<Document>("Document")({
     orgId: Schema.String,
@@ -45,18 +46,28 @@ export class Document extends Schema.Class<Document>("Document")({
     locked: Schema.Boolean,
     retentionHold: Schema.Boolean,
     sensitivity: Schema.Number.pipe(modelType("int")),
-}) {}
+}) {
+}
 
 export class Request extends Schema.Class<Request>("Request")({
     userId: Schema.String,
     action: Schema.Literals(["read", "write", "delete"]),
     mfa: Schema.Boolean,
     justification: Schema.String,
-}) {}
+}) {
+}
+
+export class PolicyConfig extends Schema.Class<PolicyConfig>("PolicyConfig")({
+    mfaThreshold: Schema.Number.pipe(modelType("int")),
+    minimumClearance: Schema.Number.pipe(modelType("int")),
+    requireEnterpriseForDelete: Schema.Boolean,
+}) {
+}
 
 export const ObjUser = fromEffectSchema("user", User);
 export const ObjDocument = fromEffectSchema("document", Document);
 export const ObjRequest = fromEffectSchema("request", Request);
+export const ObjPolicyConfig = fromEffectSchema("policy", PolicyConfig);
 
 const userIsActiveExpr = nor(
     eq(ObjUser.suspended, lit(true)),

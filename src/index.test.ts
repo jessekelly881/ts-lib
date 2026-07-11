@@ -1,12 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
     ObjDocument,
+    ObjPolicyConfig,
     ObjRequest,
     ObjUser,
     canAccessDocument,
     canAccessDocumentExpr,
 } from "./example.js";
-import { and, eq, lit, lt, not, or } from "./index.js";
+import { and, eq, gte, implies, lit, lt, not, or } from "./index.js";
 import { createZ3Compiler, z3Sorts } from "./z3.js";
 
 type CanAccessDocumentEnv = Parameters<typeof canAccessDocument>[0];
@@ -213,5 +214,60 @@ describe("canAccessDocument", () => {
                 request: { action: "delete", mfa: true },
             });
         }
+    });
+
+    it("models policy config as symbolic refs and proves invariants for all configs", async () => {
+        const startedAt = performance.now();
+        const z3 = await createZ3Compiler(z3Sorts({
+            user: ObjUser,
+            document: ObjDocument,
+            request: ObjRequest,
+            policy: ObjPolicyConfig,
+        }));
+
+        const policyExpr = and(
+            gte(ObjUser.clearance, ObjPolicyConfig.minimumClearance),
+            implies(
+                gte(ObjDocument.sensitivity, ObjPolicyConfig.mfaThreshold),
+                eq(ObjRequest.mfa, lit(true)),
+            ),
+            implies(
+                eq(ObjRequest.action, lit("delete")),
+                and(
+                    eq(ObjUser.role, lit("admin")),
+                    eq(ObjRequest.mfa, lit(true)),
+                    implies(
+                        ObjPolicyConfig.requireEnterpriseForDelete,
+                        eq(ObjUser.account.plan, lit("enterprise")),
+                    ),
+                ),
+            ),
+        );
+
+        const missingMfaCounterexample = and(
+            policyExpr,
+            gte(ObjDocument.sensitivity, ObjPolicyConfig.mfaThreshold),
+            eq(ObjRequest.mfa, lit(false)),
+        );
+
+        expect(await z3.findExample(missingMfaCounterexample)).toEqual({ status: "unsat" });
+
+        const deleteWithoutRequiredRoleCounterexample = and(
+            policyExpr,
+            eq(ObjRequest.action, lit("delete")),
+            or(
+                not(eq(ObjUser.role, lit("admin"))),
+                eq(ObjRequest.mfa, lit(false)),
+                and(
+                    ObjPolicyConfig.requireEnterpriseForDelete,
+                    not(eq(ObjUser.account.plan, lit("enterprise"))),
+                ),
+            ),
+        );
+
+        expect(await z3.findExample(deleteWithoutRequiredRoleCounterexample)).toEqual({ status: "unsat" });
+
+        const durationMs = performance.now() - startedAt;
+        console.info(`pure z3 symbolic policy invariant proof: 2 proofs over all configs in ${durationMs.toFixed(1)}ms`);
     });
 });
