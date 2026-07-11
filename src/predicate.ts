@@ -184,15 +184,6 @@ export const and = <Items extends readonly BooleanInput[]>(...items: Items): Exp
     })) as Expr<Simplify<EnvOfInputs<Items>>, "boolean">;
 };
 
-export const allDifferent = <Items extends readonly ExprInput[]>(
-    items: Items,
-): Expr<Simplify<EnvOfInputs<Items>>, "boolean"> =>
-    and(
-        ...items.flatMap((item, index) =>
-            items.slice(index + 1).map((other) => neq(item as never, other as never)),
-        ),
-    ) as Expr<Simplify<EnvOfInputs<Items>>, "boolean">;
-
 export const or = <Items extends readonly BooleanInput[]>(...items: Items): Expr<Simplify<EnvOfInputs<Items>>, "boolean"> => {
     if (items.length === 0) {
         return lit(false) as Expr<Simplify<EnvOfInputs<Items>>, "boolean">;
