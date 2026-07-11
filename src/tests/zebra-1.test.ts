@@ -1,6 +1,6 @@
 import { expect, it } from "vitest";
 import { Schema } from "effect";
-import { and, eq, neq, or } from "../index.js";
+import { allDifferent, and, eq, or } from "../index.js";
 import { fromEffectSchema } from "../effect.js";
 import { createZ3Compiler, z3Sorts } from "../z3.js";
 
@@ -15,17 +15,9 @@ export class House extends Schema.Class<House>("House")({
 
 export const Houses = fromEffectSchema("houses", Schema.Tuple([House, House, House] as const));
 
-const allColorsDifferentExpr = and(
-  neq(Houses[0].color, Houses[1].color),
-  neq(Houses[0].color, Houses[2].color),
-  neq(Houses[1].color, Houses[2].color),
-);
+const allColorsDifferentExpr = allDifferent([Houses[0].color, Houses[1].color, Houses[2].color]);
 
-const allNationalitiesDifferentExpr = and(
-  neq(Houses[0].nationality, Houses[1].nationality),
-  neq(Houses[0].nationality, Houses[2].nationality),
-  neq(Houses[1].nationality, Houses[2].nationality),
-);
+const allNationalitiesDifferentExpr = allDifferent([Houses[0].nationality, Houses[1].nationality, Houses[2].nationality]);
 
 // The Spanish lives directly to the right of the Red house.
 const spanishDirectlyRightOfRedExpr = or(

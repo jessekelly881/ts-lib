@@ -1,7 +1,7 @@
 import { expect, it } from "vitest";
 import { createZ3Compiler, z3Sorts } from "../z3.js";
 import { Schema } from "effect";
-import { and, eq, neq, or } from "../index.js";
+import { allDifferent, and, eq, neq, or } from "../index.js";
 import { fromEffectSchema } from "../effect.js";
 
 const Color = Schema.Literals(["Blue", "Green", "Red"]);
@@ -19,29 +19,13 @@ export class House extends Schema.Class<House>("House")({
 
 export const Houses = fromEffectSchema("houses", Schema.Tuple([House, House, House] as const));
 
-const allColorsDifferentExpr = and(
-  neq(Houses[0].color, Houses[1].color),
-  neq(Houses[0].color, Houses[2].color),
-  neq(Houses[1].color, Houses[2].color),
-);
+const allColorsDifferentExpr = allDifferent([Houses[0].color, Houses[1].color, Houses[2].color]);
 
-const allNationalitiesDifferentExpr = and(
-  neq(Houses[0].nationality, Houses[1].nationality),
-  neq(Houses[0].nationality, Houses[2].nationality),
-  neq(Houses[1].nationality, Houses[2].nationality),
-);
+const allNationalitiesDifferentExpr = allDifferent([Houses[0].nationality, Houses[1].nationality, Houses[2].nationality]);
 
-const allAnimalsDifferentExpr = and(
-  neq(Houses[0].animal, Houses[1].animal),
-  neq(Houses[0].animal, Houses[2].animal),
-  neq(Houses[1].animal, Houses[2].animal),
-);
+const allAnimalsDifferentExpr = allDifferent([Houses[0].animal, Houses[1].animal, Houses[2].animal]);
 
-const allSportsDifferentExpr = and(
-  neq(Houses[0].sport, Houses[1].sport),
-  neq(Houses[0].sport, Houses[2].sport),
-  neq(Houses[1].sport, Houses[2].sport),
-);
+const allSportsDifferentExpr = allDifferent([Houses[0].sport, Houses[1].sport, Houses[2].sport]);
 
 // The Brazilian does not live in house two.
 const brazilianDoesNotLiveInHouseTwoExpr = neq(Houses[1].nationality, "Brazilian");

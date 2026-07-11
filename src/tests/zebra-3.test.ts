@@ -1,7 +1,7 @@
 import { expect, it } from "vitest";
 import { createZ3Compiler, z3Sorts } from "../z3.js";
 import { Schema } from "effect";
-import { and, eq, neq, or } from "../index.js";
+import { allDifferent, and, eq, or } from "../index.js";
 import { fromEffectSchema } from "../effect.js";
 
 const Color = Schema.Literals(["Black", "Blue", "Red", "White"]);
@@ -18,10 +18,6 @@ export class House extends Schema.Class<House>("House")({
 }
 
 export const Houses = fromEffectSchema("houses", Schema.Tuple([House, House, House, House] as const));
-
-const allDifferent = <T>(values: readonly T[]) => and(
-  ...values.flatMap((value, index) => values.slice(index + 1).map((other) => neq(value as never, other as never))),
-);
 
 const allColorsDifferentExpr = allDifferent([Houses[0].color, Houses[1].color, Houses[2].color, Houses[3].color]);
 const allNationalitiesDifferentExpr = allDifferent([
