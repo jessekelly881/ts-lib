@@ -4,7 +4,7 @@ import pg from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { GenericContainer, type StartedTestContainer } from "testcontainers";
 import { ObjDocument, ObjRequest, ObjUser, canAccessDocument, canAccessDocumentExpr } from "./example.js";
-import { drizzleColumns, toDrizzleSql } from "./drizzle.js";
+import { drizzleColumns, drizzleRow, toDrizzleSql } from "./drizzle.js";
 
 const rows = pgTable("policy_rows", {
     id: serial("id").primaryKey(),
@@ -94,32 +94,6 @@ const envs: Env[] = [
     },
 ];
 
-const toRow = (env: Env) => ({
-    userId: env.user.id,
-    userRole: env.user.role,
-    userOrgId: env.user.orgId,
-    userSuspended: env.user.suspended,
-    userAge: env.user.age as number,
-    userClearance: env.user.clearance as number,
-    userEmail: env.user.email,
-    userAccountId: env.user.account.id,
-    userAccountDisabled: env.user.account.disabled,
-    userAccountPlan: env.user.account.plan,
-    documentOrgId: env.document.orgId,
-    documentOwnerId: env.document.ownerId,
-    documentTitle: env.document.title,
-    documentSlug: env.document.slug,
-    documentVisibility: env.document.visibility,
-    documentStatus: env.document.status,
-    documentLocked: env.document.locked,
-    documentRetentionHold: env.document.retentionHold,
-    documentSensitivity: env.document.sensitivity as number,
-    requestUserId: env.request.userId,
-    requestAction: env.request.action,
-    requestMfa: env.request.mfa,
-    requestJustification: env.request.justification,
-});
-
 describe("Drizzle compile target", () => {
     let container: StartedTestContainer | undefined;
     let client: pg.Client | undefined;
@@ -179,7 +153,7 @@ describe("Drizzle compile target", () => {
         }
 
         const db = drizzle(client);
-        await db.insert(rows).values(envs.map(toRow));
+        await db.insert(rows).values(envs.map((env) => drizzleRow(env, { naming: "prefixCamel" })) as Array<typeof rows.$inferInsert>);
 
         const result = await db
             .select({ id: rows.id })

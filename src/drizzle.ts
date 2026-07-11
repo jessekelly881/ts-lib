@@ -10,6 +10,11 @@ export type DrizzleColumnsOptions = {
     readonly overrides?: DrizzleColumns;
 };
 
+export type DrizzleRowOptions = {
+    readonly naming?: DrizzleColumnNaming;
+    readonly overrides?: Readonly<Record<string, unknown>>;
+};
+
 const capitalize = (value: string): string =>
     value.length === 0 ? value : `${value[0]?.toUpperCase()}${value.slice(1)}`;
 
@@ -70,6 +75,39 @@ const collectModelColumns = (
 type ModelWithFields = { readonly fields: Readonly<Record<string, unknown>> };
 type ModelTables = Readonly<Record<string, readonly [ModelWithFields, object]>>;
 type Models = Readonly<Record<string, ModelWithFields>>;
+
+export const drizzleRow = (
+    value: Readonly<Record<string, unknown>>,
+    options: DrizzleRowOptions = {},
+): Record<string, unknown> => {
+    const naming = options.naming ?? "camel";
+    const output: Record<string, unknown> = { ...(options.overrides ?? {}) };
+
+    const visit = (current: unknown, path: readonly string[]): void => {
+        if (
+            typeof current === "object" &&
+            current !== null &&
+            !Array.isArray(current)
+        ) {
+            for (const [key, child] of Object.entries(current)) {
+                visit(child, [...path, key]);
+            }
+            return;
+        }
+
+        if (path.length === 0) {
+            return;
+        }
+
+        const modelName = path[0] ?? "";
+        const fieldPath = path.slice(1);
+        output[columnProperty(modelName, fieldPath.length === 0 ? path : fieldPath, naming)] = current;
+    };
+
+    visit(value, []);
+
+    return output;
+};
 
 export function drizzleColumns<Definitions extends ModelTables>(
     definitions: Definitions,
