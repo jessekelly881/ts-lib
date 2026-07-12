@@ -20,6 +20,9 @@ export const toJsonLogic = (expr: Expr): JsonLogic => {
         case "Neq":
             return { "!=": [toJsonLogic(expr.left), toJsonLogic(expr.right)] };
 
+        case "In":
+            return { in: [toJsonLogic(expr.value), expr.values.map(toJsonLogic)] };
+
         case "Lt":
             return { "<": [toJsonLogic(expr.left), toJsonLogic(expr.right)] };
 
@@ -134,7 +137,9 @@ export const evaluateJsonLogic = (logic: JsonLogic, env: Env): Primitive => {
             return Number(args[0]) >= Number(args[1]);
 
         case "in":
-            return String(args[1]).includes(String(args[0]));
+            return Array.isArray(args[1])
+                ? args[1].some((item) => item === args[0])
+                : String(args[1]).includes(String(args[0]));
 
         case "startsWith":
             return String(args[0]).startsWith(String(args[1]));

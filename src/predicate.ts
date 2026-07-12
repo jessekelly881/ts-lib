@@ -92,11 +92,11 @@ export const endsWith = <Self extends StringInput, Suffix extends StringInput>(
 export const oneOf = <Value extends ExprInput, Values extends readonly [Primitive, ...Primitive[]]>(
     value: Value,
     values: Values,
-): Expr<Simplify<EnvOfInput<Value>>, "boolean"> =>
-    or(...values.map((item) => eq(value as never, lit(item) as never))) as Expr<
-        Simplify<EnvOfInput<Value>>,
-        "boolean"
-    >;
+): Expr<Simplify<EnvOfInput<Value>>, "boolean"> => ({
+    _tag: "In",
+    value: expr(value),
+    values: values.map(lit),
+}) as Expr<Simplify<EnvOfInput<Value>>, "boolean">;
 
 export const notOneOf = <Value extends ExprInput, Values extends readonly [Primitive, ...Primitive[]]>(
     value: Value,

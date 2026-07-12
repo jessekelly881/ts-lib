@@ -25,6 +25,11 @@ export const evaluate = (expr: Expr, env: Env): Primitive => {
         case "Neq":
             return evaluate(expr.left, env) !== evaluate(expr.right, env);
 
+        case "In": {
+            const value = evaluate(expr.value, env);
+            return expr.values.some((item) => evaluate(item, env) === value);
+        }
+
         case "Lt":
             return Number(evaluate(expr.left, env)) < Number(evaluate(expr.right, env));
 

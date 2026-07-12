@@ -23,6 +23,7 @@ export type Expr<A = unknown, S extends ExprSort = ExprSort> = (
     | { _tag: "Literal"; value: Primitive }
     | { _tag: "Eq"; left: Expr; right: Expr }
     | { _tag: "Neq"; left: Expr; right: Expr }
+    | { _tag: "In"; value: Expr; values: readonly Expr[] }
     | { _tag: "Lt"; left: Expr; right: Expr }
     | { _tag: "Lte"; left: Expr; right: Expr }
     | { _tag: "Gt"; left: Expr; right: Expr }

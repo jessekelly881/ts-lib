@@ -294,6 +294,7 @@ export const createZ3Compiler = async (sorts: Z3Sorts) => {
 
             case "Eq":
             case "Neq":
+            case "In":
             case "Lt":
             case "Lte":
             case "Gt":
@@ -340,6 +341,7 @@ export const createZ3Compiler = async (sorts: Z3Sorts) => {
 
             case "Eq":
             case "Neq":
+            case "In":
             case "Lt":
             case "Lte":
             case "Gt":
@@ -499,6 +501,13 @@ export const createZ3Compiler = async (sorts: Z3Sorts) => {
                     left: expr.left,
                     right: expr.right,
                 }));
+
+            case "In":
+                return context.Or(...expr.values.map((value) => compileEquality({
+                    _tag: "Eq",
+                    left: expr.value,
+                    right: value,
+                })));
 
             case "Lt":
             case "Lte":

@@ -1,5 +1,5 @@
-import type { BooleanInput, EnvOfInputs, Expr, ExprInput, Simplify } from "./ast.js";
-import { and, eq, neq, or } from "./predicate.js";
+import { expr, type BooleanInput, type EnvOfInputs, type Expr, type ExprInput, type Simplify } from "./ast.js";
+import { and, neq, or } from "./predicate.js";
 
 export const unique = <Items extends readonly ExprInput[]>(
     items: Items,
@@ -61,8 +61,9 @@ export function contains<Items extends readonly ExprInput[], Value extends ExprI
         return (items: Items) => contains(items, itemsOrValue as Value);
     }
 
-    return or(...(itemsOrValue as Items).map((item) => eq(item as never, maybeValue as never))) as Expr<
-        Simplify<EnvOfInputs<Items>>,
-        "boolean"
-    >;
+    return {
+        _tag: "In",
+        value: expr(maybeValue),
+        values: (itemsOrValue as Items).map(expr),
+    } as Expr<Simplify<EnvOfInputs<Items>>, "boolean">;
 }

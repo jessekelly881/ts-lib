@@ -177,6 +177,19 @@ export const toDrizzleSql = (expr: Expr, columns: DrizzleColumns = {}): SQL => {
         case "Neq":
             return drizzleNe(toDrizzleSql(expr.left, columns), toDrizzleSql(expr.right, columns));
 
+        case "In": {
+            const value = toDrizzleSql(expr.value, columns);
+            const literalValues = expr.values.every((item) => item._tag === "Literal")
+                ? expr.values.map((item) => (item as Extract<Expr, { _tag: "Literal" }>).value)
+                : undefined;
+
+            if (literalValues !== undefined) {
+                return inArray(value, literalValues);
+            }
+
+            return drizzleOr(...expr.values.map((item) => drizzleEq(value, toDrizzleSql(item, columns)))) as SQL;
+        }
+
         case "Lt":
             return drizzleLt(toDrizzleSql(expr.left, columns), toDrizzleSql(expr.right, columns));
 
