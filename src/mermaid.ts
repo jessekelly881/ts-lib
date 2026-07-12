@@ -2,7 +2,10 @@ import type { Expr, Primitive } from "./ast.js";
 
 export type MermaidDirection = "TD" | "TB" | "BT" | "RL" | "LR";
 
+export type MermaidChart = "flowchart" | "mindmap";
+
 export type ToMermaidOptions = {
+    readonly chart?: MermaidChart;
     readonly direction?: MermaidDirection;
 };
 
@@ -125,7 +128,7 @@ const children = (expr: Expr): readonly Expr[] => {
     }
 };
 
-export const toMermaid = (expr: Expr, options: ToMermaidOptions = {}): string => {
+const toMermaidFlowchart = (expr: Expr, options: ToMermaidOptions): string => {
     const direction = options.direction ?? "TD";
     const lines = [`graph ${direction}`];
     let nextId = 0;
@@ -149,3 +152,27 @@ export const toMermaid = (expr: Expr, options: ToMermaidOptions = {}): string =>
     visit(expr);
     return lines.join("\n");
 };
+
+const mindmapLabel = (value: string): string => label(value).replace(/[()]/g, "");
+
+const toMermaidMindmap = (expr: Expr): string => {
+    const lines = ["mindmap"];
+
+    const visit = (current: Expr, depth: number): void => {
+        const indentation = "  ".repeat(depth);
+        const text = mindmapLabel(nodeLabel(current));
+        lines.push(`${indentation}${depth === 1 ? `root((${text}))` : text}`);
+
+        if (shouldExpand(current)) {
+            for (const child of children(current)) {
+                visit(child, depth + 1);
+            }
+        }
+    };
+
+    visit(expr, 1);
+    return lines.join("\n");
+};
+
+export const toMermaid = (expr: Expr, options: ToMermaidOptions = {}): string =>
+    options.chart === "mindmap" ? toMermaidMindmap(expr) : toMermaidFlowchart(expr, options);

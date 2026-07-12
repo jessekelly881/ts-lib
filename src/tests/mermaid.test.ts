@@ -5,13 +5,19 @@ import { zebraTwoExpr } from "../testing/zebra-2.js";
 import { zebraThreeExpr } from "../testing/zebra-3.js";
 
 const cases = [
-  ["zebra-1", zebraOneExpr, "./__snapshots__/zebra-1.mmd"],
-  ["zebra-2", zebraTwoExpr, "./__snapshots__/zebra-2.mmd"],
-  ["zebra-3", zebraThreeExpr, "./__snapshots__/zebra-3.mmd"],
+  ["zebra-1", zebraOneExpr, "zebra-1"],
+  ["zebra-2", zebraTwoExpr, "zebra-2"],
+  ["zebra-3", zebraThreeExpr, "zebra-3"],
 ] as const;
 
 describe("toMermaid", () => {
-  it.each(cases)("renders %s", async (_name, expr, snapshotPath) => {
-    await expect(toMermaid(expr)).toMatchFileSnapshot(snapshotPath);
+  it.each(cases)("renders %s flowchart", async (_name, expr, fileName) => {
+    await expect(toMermaid(expr)).toMatchFileSnapshot(`./__snapshots__/${fileName}.mmd`);
+  });
+
+  it.each(cases)("renders %s mindmap", async (_name, expr, fileName) => {
+    await expect(toMermaid(expr, { chart: "mindmap" })).toMatchFileSnapshot(
+      `./__snapshots__/${fileName}.mindmap.mmd`,
+    );
   });
 });
