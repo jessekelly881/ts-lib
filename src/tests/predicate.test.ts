@@ -19,13 +19,6 @@ describe("toPredicate", () => {
     expect(toPredicate(expr as never)(solution as never)).toBe(true);
   });
 
-  it.each(cases)("fast mode matches safe mode for %s", (_name, expr, solution) => {
-    const fast = toPredicate(expr as never, { mode: "fast" })(solution as never);
-    const safe = toPredicate(expr as never, { mode: "safe" })(solution as never);
-
-    expect(fast).toBe(safe);
-  });
-
   it("property: fast mode matches safe mode for any generated Expr", () => {
     fc.assert(
       fc.property(exprArb(), (expr) => {
