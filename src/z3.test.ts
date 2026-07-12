@@ -202,8 +202,10 @@ describe("z3-supported predicate combinators", () => {
         await fc.assert(
             fc.asyncProperty(booleanExpr, async (expr) => {
                 const jsResult = toPredicate(expr)({});
+                const safeResult = toPredicate(expr, { mode: "safe" })({});
                 const z3Result = await z3.solver(expr).check();
 
+                expect(safeResult).toBe(jsResult);
                 expect(z3Result).toBe(jsResult ? "sat" : "unsat");
             }),
             { numRuns: 100 },
@@ -216,8 +218,10 @@ describe("z3-supported predicate combinators", () => {
         await fc.assert(
             fc.asyncProperty(refBooleanExpr, envArbitrary, async (expr, env) => {
                 const jsResult = toPredicate(expr)(env);
+                const safeResult = toPredicate(expr, { mode: "safe" })(env);
                 const z3Result = await z3.solver(and(envConstraints(env), expr)).check();
 
+                expect(safeResult).toBe(jsResult);
                 expect(z3Result).toBe(jsResult ? "sat" : "unsat");
             }),
             { numRuns: 100 },

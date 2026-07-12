@@ -7,37 +7,46 @@ import { zebraThreeExpr, zebraThreeSolution } from "../testing/zebra-3.js";
 
 type BenchCase = {
   readonly name: string;
-  readonly predicate: (env: never) => boolean;
+  readonly fast: (env: never) => boolean;
+  readonly safe: (env: never) => boolean;
   readonly solution: never;
 };
 
 const cases: readonly BenchCase[] = [
   {
     name: "zebra-1",
-    predicate: toPredicate(zebraOneExpr) as (env: never) => boolean,
+    fast: toPredicate(zebraOneExpr, { mode: "fast" }) as (env: never) => boolean,
+    safe: toPredicate(zebraOneExpr, { mode: "safe" }) as (env: never) => boolean,
     solution: zebraOneSolution as never,
   },
   {
     name: "zebra-2",
-    predicate: toPredicate(zebraTwoExpr) as (env: never) => boolean,
+    fast: toPredicate(zebraTwoExpr, { mode: "fast" }) as (env: never) => boolean,
+    safe: toPredicate(zebraTwoExpr, { mode: "safe" }) as (env: never) => boolean,
     solution: zebraTwoSolution as never,
   },
   {
     name: "zebra-3",
-    predicate: toPredicate(zebraThreeExpr) as (env: never) => boolean,
+    fast: toPredicate(zebraThreeExpr, { mode: "fast" }) as (env: never) => boolean,
+    safe: toPredicate(zebraThreeExpr, { mode: "safe" }) as (env: never) => boolean,
     solution: zebraThreeSolution as never,
   },
   {
     name: "einstein",
-    predicate: toPredicate(einsteinExpr) as (env: never) => boolean,
+    fast: toPredicate(einsteinExpr, { mode: "fast" }) as (env: never) => boolean,
+    safe: toPredicate(einsteinExpr, { mode: "safe" }) as (env: never) => boolean,
     solution: einsteinSolution as never,
   },
 ];
 
 describe("toPredicate", () => {
-  for (const { name, predicate, solution } of cases) {
-    bench(name, () => {
-      predicate(solution);
+  for (const { name, fast, safe, solution } of cases) {
+    bench(`${name} (fast)`, () => {
+      fast(solution);
+    });
+
+    bench(`${name} (safe)`, () => {
+      safe(solution);
     });
   }
 });
