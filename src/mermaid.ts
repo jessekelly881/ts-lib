@@ -18,6 +18,33 @@ const primitiveLabel = (value: Primitive): string =>
 
 const refLabel = (expr: Extract<Expr, { _tag: "Ref" }>): string => [expr.name, ...expr.path].join(".");
 
+const inlineExprLabel = (expr: Expr): string => {
+    switch (expr._tag) {
+        case "Literal":
+            return primitiveLabel(expr.value);
+        case "Ref":
+            return refLabel(expr);
+        case "StringLength":
+            return `length(${inlineExprLabel(expr.self)})`;
+        case "Concat":
+            return `(${inlineExprLabel(expr.left)} + ${inlineExprLabel(expr.right)})`;
+        case "Substring":
+            return `substring(${inlineExprLabel(expr.self)}, ${inlineExprLabel(expr.offset)}, ${inlineExprLabel(expr.length)})`;
+        case "Add":
+            return `(${inlineExprLabel(expr.left)} + ${inlineExprLabel(expr.right)})`;
+        case "Sub":
+            return `(${inlineExprLabel(expr.left)} - ${inlineExprLabel(expr.right)})`;
+        case "Mul":
+            return `(${inlineExprLabel(expr.left)} * ${inlineExprLabel(expr.right)})`;
+        case "Div":
+            return `(${inlineExprLabel(expr.left)} / ${inlineExprLabel(expr.right)})`;
+        case "Mod":
+            return `(${inlineExprLabel(expr.left)} % ${inlineExprLabel(expr.right)})`;
+        default:
+            return nodeLabel(expr);
+    }
+};
+
 const nodeLabel = (expr: Expr): string => {
     switch (expr._tag) {
         case "Literal":
@@ -25,41 +52,34 @@ const nodeLabel = (expr: Expr): string => {
         case "Ref":
             return refLabel(expr);
         case "Eq":
-            return "===";
+            return `${inlineExprLabel(expr.left)} === ${inlineExprLabel(expr.right)}`;
         case "Neq":
-            return "!==";
+            return `${inlineExprLabel(expr.left)} !== ${inlineExprLabel(expr.right)}`;
         case "In":
-            return "in";
+            return `${inlineExprLabel(expr.value)} in [${expr.values.map(inlineExprLabel).join(", ")}]`;
         case "Lt":
-            return "<";
+            return `${inlineExprLabel(expr.left)} < ${inlineExprLabel(expr.right)}`;
         case "Lte":
-            return "<=";
+            return `${inlineExprLabel(expr.left)} <= ${inlineExprLabel(expr.right)}`;
         case "Gt":
-            return ">";
+            return `${inlineExprLabel(expr.left)} > ${inlineExprLabel(expr.right)}`;
         case "Gte":
-            return ">=";
+            return `${inlineExprLabel(expr.left)} >= ${inlineExprLabel(expr.right)}`;
         case "Contains":
-            return "contains";
+            return `${inlineExprLabel(expr.self)} contains ${inlineExprLabel(expr.search)}`;
         case "StartsWith":
-            return "startsWith";
+            return `${inlineExprLabel(expr.self)} startsWith ${inlineExprLabel(expr.prefix)}`;
         case "EndsWith":
-            return "endsWith";
+            return `${inlineExprLabel(expr.self)} endsWith ${inlineExprLabel(expr.suffix)}`;
         case "StringLength":
-            return "length";
         case "Concat":
-            return "concat";
         case "Substring":
-            return "substring";
         case "Add":
-            return "+";
         case "Sub":
-            return "-";
         case "Mul":
-            return "*";
         case "Div":
-            return "/";
         case "Mod":
-            return "%";
+            return inlineExprLabel(expr);
         case "Not":
             return "not";
         case "And":
@@ -75,29 +95,33 @@ const nodeLabel = (expr: Expr): string => {
     }
 };
 
+const shouldExpand = (expr: Expr): boolean => {
+    switch (expr._tag) {
+        case "Not":
+        case "And":
+        case "Or":
+        case "Xor":
+        case "Eqv":
+        case "Implies":
+            return true;
+        default:
+            return false;
+    }
+};
+
 const children = (expr: Expr): readonly Expr[] => {
     switch (expr._tag) {
-        case "Literal":
-        case "Ref":
-            return [];
         case "Not":
             return [expr.expr];
-        case "StringLength":
-            return [expr.self];
-        case "In":
-            return [expr.value, ...expr.values];
-        case "Contains":
-            return [expr.self, expr.search];
-        case "StartsWith":
-            return [expr.self, expr.prefix];
-        case "EndsWith":
-            return [expr.self, expr.suffix];
-        case "Substring":
-            return [expr.self, expr.offset, expr.length];
+        case "And":
+        case "Or":
+        case "Xor":
+        case "Eqv":
+            return [expr.left, expr.right];
         case "Implies":
             return [expr.antecedent, expr.consequent];
         default:
-            return [expr.left, expr.right];
+            return [];
     }
 };
 
@@ -112,9 +136,11 @@ export const toMermaid = (expr: Expr, options: ToMermaidOptions = {}): string =>
 
         lines.push(`  ${id}["${label(nodeLabel(current))}"]`);
 
-        for (const child of children(current)) {
-            const childId = visit(child);
-            lines.push(`  ${id} --> ${childId}`);
+        if (shouldExpand(current)) {
+            for (const child of children(current)) {
+                const childId = visit(child);
+                lines.push(`  ${id} --> ${childId}`);
+            }
         }
 
         return id;

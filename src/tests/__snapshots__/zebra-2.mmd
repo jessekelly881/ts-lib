@@ -8,231 +8,111 @@ graph TD
   n6["and"]
   n7["and"]
   n8["and"]
-  n9["!=="]
-  n10["houses.1.nationality"]
-  n9 --> n10
-  n11["&quot;Brazilian&quot;"]
-  n9 --> n11
+  n9["houses.1.nationality !== &quot;Brazilian&quot;"]
   n8 --> n9
-  n12["or"]
-  n13["or"]
-  n14["and"]
-  n15["==="]
-  n16["houses.0.animal"]
-  n15 --> n16
-  n17["&quot;Dog&quot;"]
-  n15 --> n17
-  n14 --> n15
-  n18["==="]
-  n19["houses.0.sport"]
-  n18 --> n19
-  n20["&quot;Basketball&quot;"]
-  n18 --> n20
-  n14 --> n18
-  n13 --> n14
-  n21["and"]
-  n22["==="]
-  n23["houses.1.animal"]
-  n22 --> n23
-  n24["&quot;Dog&quot;"]
-  n22 --> n24
-  n21 --> n22
-  n25["==="]
-  n26["houses.1.sport"]
-  n25 --> n26
-  n27["&quot;Basketball&quot;"]
-  n25 --> n27
-  n21 --> n25
-  n13 --> n21
+  n10["or"]
+  n11["or"]
+  n12["and"]
+  n13["houses.0.animal === &quot;Dog&quot;"]
   n12 --> n13
-  n28["and"]
-  n29["==="]
-  n30["houses.2.animal"]
-  n29 --> n30
-  n31["&quot;Dog&quot;"]
-  n29 --> n31
-  n28 --> n29
-  n32["==="]
-  n33["houses.2.sport"]
-  n32 --> n33
-  n34["&quot;Basketball&quot;"]
-  n32 --> n34
-  n28 --> n32
-  n12 --> n28
-  n8 --> n12
+  n14["houses.0.sport === &quot;Basketball&quot;"]
+  n12 --> n14
+  n11 --> n12
+  n15["and"]
+  n16["houses.1.animal === &quot;Dog&quot;"]
+  n15 --> n16
+  n17["houses.1.sport === &quot;Basketball&quot;"]
+  n15 --> n17
+  n11 --> n15
+  n10 --> n11
+  n18["and"]
+  n19["houses.2.animal === &quot;Dog&quot;"]
+  n18 --> n19
+  n20["houses.2.sport === &quot;Basketball&quot;"]
+  n18 --> n20
+  n10 --> n18
+  n8 --> n10
   n7 --> n8
-  n35["and"]
-  n36["==="]
-  n37["houses.0.sport"]
-  n36 --> n37
-  n38["&quot;Football&quot;"]
-  n36 --> n38
-  n35 --> n36
-  n39["==="]
-  n40["houses.2.color"]
-  n39 --> n40
-  n41["&quot;Red&quot;"]
-  n39 --> n41
-  n35 --> n39
-  n7 --> n35
+  n21["and"]
+  n22["houses.0.sport === &quot;Football&quot;"]
+  n21 --> n22
+  n23["houses.2.color === &quot;Red&quot;"]
+  n21 --> n23
+  n7 --> n21
   n6 --> n7
-  n42["or"]
-  n43["and"]
-  n44["==="]
-  n45["houses.0.animal"]
-  n44 --> n45
-  n46["&quot;Fish&quot;"]
-  n44 --> n46
-  n43 --> n44
-  n47["==="]
-  n48["houses.1.animal"]
-  n47 --> n48
-  n49["&quot;Cat&quot;"]
-  n47 --> n49
-  n43 --> n47
-  n42 --> n43
-  n50["and"]
-  n51["==="]
-  n52["houses.1.animal"]
-  n51 --> n52
-  n53["&quot;Fish&quot;"]
-  n51 --> n53
-  n50 --> n51
-  n54["==="]
-  n55["houses.2.animal"]
-  n54 --> n55
-  n56["&quot;Cat&quot;"]
-  n54 --> n56
-  n50 --> n54
-  n42 --> n50
-  n6 --> n42
+  n24["or"]
+  n25["and"]
+  n26["houses.0.animal === &quot;Fish&quot;"]
+  n25 --> n26
+  n27["houses.1.animal === &quot;Cat&quot;"]
+  n25 --> n27
+  n24 --> n25
+  n28["and"]
+  n29["houses.1.animal === &quot;Fish&quot;"]
+  n28 --> n29
+  n30["houses.2.animal === &quot;Cat&quot;"]
+  n28 --> n30
+  n24 --> n28
+  n6 --> n24
   n5 --> n6
-  n57["or"]
-  n58["and"]
-  n59["==="]
-  n60["houses.0.color"]
-  n59 --> n60
-  n61["&quot;Green&quot;"]
-  n59 --> n61
-  n58 --> n59
-  n62["==="]
-  n63["houses.1.animal"]
-  n62 --> n63
-  n64["&quot;Dog&quot;"]
-  n62 --> n64
-  n58 --> n62
-  n57 --> n58
-  n65["and"]
-  n66["==="]
-  n67["houses.1.color"]
-  n66 --> n67
-  n68["&quot;Green&quot;"]
-  n66 --> n68
-  n65 --> n66
-  n69["==="]
-  n70["houses.2.animal"]
-  n69 --> n70
-  n71["&quot;Dog&quot;"]
-  n69 --> n71
-  n65 --> n69
-  n57 --> n65
-  n5 --> n57
+  n31["or"]
+  n32["and"]
+  n33["houses.0.color === &quot;Green&quot;"]
+  n32 --> n33
+  n34["houses.1.animal === &quot;Dog&quot;"]
+  n32 --> n34
+  n31 --> n32
+  n35["and"]
+  n36["houses.1.color === &quot;Green&quot;"]
+  n35 --> n36
+  n37["houses.2.animal === &quot;Dog&quot;"]
+  n35 --> n37
+  n31 --> n35
+  n5 --> n31
   n4 --> n5
-  n72["==="]
-  n73["houses.2.nationality"]
-  n72 --> n73
-  n74["&quot;German&quot;"]
-  n72 --> n74
-  n4 --> n72
+  n38["houses.2.nationality === &quot;German&quot;"]
+  n4 --> n38
   n3 --> n4
-  n75["and"]
-  n76["and"]
-  n77["!=="]
-  n78["houses.0.color"]
-  n77 --> n78
-  n79["houses.1.color"]
-  n77 --> n79
-  n76 --> n77
-  n80["!=="]
-  n81["houses.0.color"]
-  n80 --> n81
-  n82["houses.2.color"]
-  n80 --> n82
-  n76 --> n80
-  n75 --> n76
-  n83["!=="]
-  n84["houses.1.color"]
-  n83 --> n84
-  n85["houses.2.color"]
-  n83 --> n85
-  n75 --> n83
-  n3 --> n75
+  n39["and"]
+  n40["and"]
+  n41["houses.0.color !== houses.1.color"]
+  n40 --> n41
+  n42["houses.0.color !== houses.2.color"]
+  n40 --> n42
+  n39 --> n40
+  n43["houses.1.color !== houses.2.color"]
+  n39 --> n43
+  n3 --> n39
   n2 --> n3
-  n86["and"]
-  n87["and"]
-  n88["!=="]
-  n89["houses.0.nationality"]
-  n88 --> n89
-  n90["houses.1.nationality"]
-  n88 --> n90
-  n87 --> n88
-  n91["!=="]
-  n92["houses.0.nationality"]
-  n91 --> n92
-  n93["houses.2.nationality"]
-  n91 --> n93
-  n87 --> n91
-  n86 --> n87
-  n94["!=="]
-  n95["houses.1.nationality"]
-  n94 --> n95
-  n96["houses.2.nationality"]
-  n94 --> n96
-  n86 --> n94
-  n2 --> n86
+  n44["and"]
+  n45["and"]
+  n46["houses.0.nationality !== houses.1.nationality"]
+  n45 --> n46
+  n47["houses.0.nationality !== houses.2.nationality"]
+  n45 --> n47
+  n44 --> n45
+  n48["houses.1.nationality !== houses.2.nationality"]
+  n44 --> n48
+  n2 --> n44
   n1 --> n2
-  n97["and"]
-  n98["and"]
-  n99["!=="]
-  n100["houses.0.animal"]
-  n99 --> n100
-  n101["houses.1.animal"]
-  n99 --> n101
-  n98 --> n99
-  n102["!=="]
-  n103["houses.0.animal"]
-  n102 --> n103
-  n104["houses.2.animal"]
-  n102 --> n104
-  n98 --> n102
-  n97 --> n98
-  n105["!=="]
-  n106["houses.1.animal"]
-  n105 --> n106
-  n107["houses.2.animal"]
-  n105 --> n107
-  n97 --> n105
-  n1 --> n97
+  n49["and"]
+  n50["and"]
+  n51["houses.0.animal !== houses.1.animal"]
+  n50 --> n51
+  n52["houses.0.animal !== houses.2.animal"]
+  n50 --> n52
+  n49 --> n50
+  n53["houses.1.animal !== houses.2.animal"]
+  n49 --> n53
+  n1 --> n49
   n0 --> n1
-  n108["and"]
-  n109["and"]
-  n110["!=="]
-  n111["houses.0.sport"]
-  n110 --> n111
-  n112["houses.1.sport"]
-  n110 --> n112
-  n109 --> n110
-  n113["!=="]
-  n114["houses.0.sport"]
-  n113 --> n114
-  n115["houses.2.sport"]
-  n113 --> n115
-  n109 --> n113
-  n108 --> n109
-  n116["!=="]
-  n117["houses.1.sport"]
-  n116 --> n117
-  n118["houses.2.sport"]
-  n116 --> n118
-  n108 --> n116
-  n0 --> n108
+  n54["and"]
+  n55["and"]
+  n56["houses.0.sport !== houses.1.sport"]
+  n55 --> n56
+  n57["houses.0.sport !== houses.2.sport"]
+  n55 --> n57
+  n54 --> n55
+  n58["houses.1.sport !== houses.2.sport"]
+  n54 --> n58
+  n0 --> n54
