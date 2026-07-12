@@ -112,6 +112,9 @@ const exprToJavaScript = (expr: Expr): string => {
     return source;
 };
 
+// TODO before publishing: this uses `new Function` for speed, which is eval-like.
+// Expose/document a non-eval safe fallback for strict CSP, restricted runtimes,
+// security scanners, and consumers compiling untrusted raw AST input.
 export const toPredicate = <E extends Expr>(expr: E): ((env: EnvOf<E>) => boolean) => {
     const cached = predicateCache.get(expr);
     if (cached !== undefined) {
