@@ -20,4 +20,10 @@ describe("toMermaid", () => {
       `./__snapshots__/${fileName}.mindmap.mmd`,
     );
   });
+
+  it.each(cases)("renders %s factor graph", async (_name, expr, fileName) => {
+    await expect(toMermaid(expr, { chart: "factor" })).toMatchFileSnapshot(
+      `./__snapshots__/${fileName}.factor.mmd`,
+    );
+  });
 });

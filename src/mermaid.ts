@@ -2,7 +2,7 @@ import type { Expr, Primitive } from "./ast.js";
 
 export type MermaidDirection = "TD" | "TB" | "BT" | "RL" | "LR";
 
-export type MermaidChart = "flowchart" | "mindmap";
+export type MermaidChart = "flowchart" | "mindmap" | "factor";
 
 export type ToMermaidOptions = {
     readonly chart?: MermaidChart;
@@ -194,5 +194,90 @@ const toMermaidMindmap = (expr: Expr): string => {
     return lines.join("\n");
 };
 
-export const toMermaid = (expr: Expr, options: ToMermaidOptions = {}): string =>
-    options.chart === "mindmap" ? toMermaidMindmap(expr) : toMermaidFlowchart(expr, options);
+const collectRefs = (expr: Expr): readonly string[] => {
+    const refs = new Set<string>();
+
+    const visit = (current: Expr): void => {
+        if (current._tag === "Ref") {
+            refs.add(refLabel(current));
+            return;
+        }
+
+        for (const child of childrenForTraversal(current)) {
+            visit(child);
+        }
+    };
+
+    visit(expr);
+    return [...refs].sort();
+};
+
+const childrenForTraversal = (expr: Expr): readonly Expr[] => {
+    switch (expr._tag) {
+        case "Literal":
+        case "Ref":
+            return [];
+        case "Not":
+            return [expr.expr];
+        case "StringLength":
+            return [expr.self];
+        case "In":
+            return [expr.value, ...expr.values];
+        case "Contains":
+            return [expr.self, expr.search];
+        case "StartsWith":
+            return [expr.self, expr.prefix];
+        case "EndsWith":
+            return [expr.self, expr.suffix];
+        case "Substring":
+            return [expr.self, expr.offset, expr.length];
+        case "Implies":
+            return [expr.antecedent, expr.consequent];
+        default:
+            return [expr.left, expr.right];
+    }
+};
+
+const topLevelFactors = (expr: Expr): readonly Expr[] =>
+    expr._tag === "And" ? flattenAssociative(expr) : [expr];
+
+const toMermaidFactorGraph = (expr: Expr): string => {
+    const lines = ["flowchart LR"];
+    const variableIds = new Map<string, string>();
+    let nextVariableId = 0;
+
+    const variableId = (ref: string): string => {
+        const cached = variableIds.get(ref);
+        if (cached !== undefined) {
+            return cached;
+        }
+
+        const id = `v${nextVariableId}`;
+        nextVariableId += 1;
+        variableIds.set(ref, id);
+        lines.push(`  ${id}["${label(ref)}"]`);
+        return id;
+    };
+
+    topLevelFactors(expr).forEach((factor, index) => {
+        const factorId = `f${index}`;
+        lines.push(`  ${factorId}(("${label(nodeLabel(factor))}"))`);
+
+        for (const ref of collectRefs(factor)) {
+            lines.push(`  ${factorId} --- ${variableId(ref)}`);
+        }
+    });
+
+    return lines.join("\n");
+};
+
+export const toMermaid = (expr: Expr, options: ToMermaidOptions = {}): string => {
+    switch (options.chart) {
+        case "mindmap":
+            return toMermaidMindmap(expr);
+        case "factor":
+            return toMermaidFactorGraph(expr);
+        default:
+            return toMermaidFlowchart(expr, options);
+    }
+};
