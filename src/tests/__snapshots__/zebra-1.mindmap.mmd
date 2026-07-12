@@ -1,34 +1,26 @@
 mindmap
   root((and))
-    and
+    or
       and
-        and
-          or
-            and
-              houses.0.color === &quot;Red&quot;
-              houses.1.nationality === &quot;Spanish&quot;
-            and
-              houses.1.color === &quot;Red&quot;
-              houses.2.nationality === &quot;Spanish&quot;
-          or
-            or
-              and
-                houses.0.color === &quot;Blue&quot;
-                houses.0.nationality === &quot;Norwegian&quot;
-              and
-                houses.1.color === &quot;Blue&quot;
-                houses.1.nationality === &quot;Norwegian&quot;
-            and
-              houses.2.color === &quot;Blue&quot;
-              houses.2.nationality === &quot;Norwegian&quot;
-        houses.1.nationality === &quot;Italian&quot;
+        houses.0.color === &quot;Red&quot;
+        houses.1.nationality === &quot;Spanish&quot;
       and
-        and
-          houses.0.nationality !== houses.1.nationality
-          houses.0.nationality !== houses.2.nationality
-        houses.1.nationality !== houses.2.nationality
-    and
+        houses.1.color === &quot;Red&quot;
+        houses.2.nationality === &quot;Spanish&quot;
+    or
       and
-        houses.0.color !== houses.1.color
-        houses.0.color !== houses.2.color
-      houses.1.color !== houses.2.color
+        houses.0.color === &quot;Blue&quot;
+        houses.0.nationality === &quot;Norwegian&quot;
+      and
+        houses.1.color === &quot;Blue&quot;
+        houses.1.nationality === &quot;Norwegian&quot;
+      and
+        houses.2.color === &quot;Blue&quot;
+        houses.2.nationality === &quot;Norwegian&quot;
+    houses.1.nationality === &quot;Italian&quot;
+    houses.0.nationality !== houses.1.nationality
+    houses.0.nationality !== houses.2.nationality
+    houses.1.nationality !== houses.2.nationality
+    houses.0.color !== houses.1.color
+    houses.0.color !== houses.2.color
+    houses.1.color !== houses.2.color

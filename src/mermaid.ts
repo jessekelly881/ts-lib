@@ -155,6 +155,26 @@ const toMermaidFlowchart = (expr: Expr, options: ToMermaidOptions): string => {
 
 const mindmapLabel = (value: string): string => label(value).replace(/[()]/g, "");
 
+const flattenAssociative = (expr: Expr): readonly Expr[] => {
+    if (expr._tag !== "And" && expr._tag !== "Or") {
+        return children(expr);
+    }
+
+    const flattened: Expr[] = [];
+    const visit = (current: Expr): void => {
+        if (current._tag === expr._tag) {
+            visit(current.left);
+            visit(current.right);
+            return;
+        }
+
+        flattened.push(current);
+    };
+
+    visit(expr);
+    return flattened;
+};
+
 const toMermaidMindmap = (expr: Expr): string => {
     const lines = ["mindmap"];
 
@@ -164,7 +184,7 @@ const toMermaidMindmap = (expr: Expr): string => {
         lines.push(`${indentation}${depth === 1 ? `root((${text}))` : text}`);
 
         if (shouldExpand(current)) {
-            for (const child of children(current)) {
+            for (const child of flattenAssociative(current)) {
                 visit(child, depth + 1);
             }
         }

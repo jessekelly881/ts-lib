@@ -1,60 +1,42 @@
 mindmap
   root((and))
-    and
+    houses.1.nationality !== &quot;Brazilian&quot;
+    or
       and
-        and
-          and
-            and
-              and
-                and
-                  and
-                    houses.1.nationality !== &quot;Brazilian&quot;
-                    or
-                      or
-                        and
-                          houses.0.animal === &quot;Dog&quot;
-                          houses.0.sport === &quot;Basketball&quot;
-                        and
-                          houses.1.animal === &quot;Dog&quot;
-                          houses.1.sport === &quot;Basketball&quot;
-                      and
-                        houses.2.animal === &quot;Dog&quot;
-                        houses.2.sport === &quot;Basketball&quot;
-                  and
-                    houses.0.sport === &quot;Football&quot;
-                    houses.2.color === &quot;Red&quot;
-                or
-                  and
-                    houses.0.animal === &quot;Fish&quot;
-                    houses.1.animal === &quot;Cat&quot;
-                  and
-                    houses.1.animal === &quot;Fish&quot;
-                    houses.2.animal === &quot;Cat&quot;
-              or
-                and
-                  houses.0.color === &quot;Green&quot;
-                  houses.1.animal === &quot;Dog&quot;
-                and
-                  houses.1.color === &quot;Green&quot;
-                  houses.2.animal === &quot;Dog&quot;
-            houses.2.nationality === &quot;German&quot;
-          and
-            and
-              houses.0.color !== houses.1.color
-              houses.0.color !== houses.2.color
-            houses.1.color !== houses.2.color
-        and
-          and
-            houses.0.nationality !== houses.1.nationality
-            houses.0.nationality !== houses.2.nationality
-          houses.1.nationality !== houses.2.nationality
+        houses.0.animal === &quot;Dog&quot;
+        houses.0.sport === &quot;Basketball&quot;
       and
-        and
-          houses.0.animal !== houses.1.animal
-          houses.0.animal !== houses.2.animal
-        houses.1.animal !== houses.2.animal
-    and
+        houses.1.animal === &quot;Dog&quot;
+        houses.1.sport === &quot;Basketball&quot;
       and
-        houses.0.sport !== houses.1.sport
-        houses.0.sport !== houses.2.sport
-      houses.1.sport !== houses.2.sport
+        houses.2.animal === &quot;Dog&quot;
+        houses.2.sport === &quot;Basketball&quot;
+    houses.0.sport === &quot;Football&quot;
+    houses.2.color === &quot;Red&quot;
+    or
+      and
+        houses.0.animal === &quot;Fish&quot;
+        houses.1.animal === &quot;Cat&quot;
+      and
+        houses.1.animal === &quot;Fish&quot;
+        houses.2.animal === &quot;Cat&quot;
+    or
+      and
+        houses.0.color === &quot;Green&quot;
+        houses.1.animal === &quot;Dog&quot;
+      and
+        houses.1.color === &quot;Green&quot;
+        houses.2.animal === &quot;Dog&quot;
+    houses.2.nationality === &quot;German&quot;
+    houses.0.color !== houses.1.color
+    houses.0.color !== houses.2.color
+    houses.1.color !== houses.2.color
+    houses.0.nationality !== houses.1.nationality
+    houses.0.nationality !== houses.2.nationality
+    houses.1.nationality !== houses.2.nationality
+    houses.0.animal !== houses.1.animal
+    houses.0.animal !== houses.2.animal
+    houses.1.animal !== houses.2.animal
+    houses.0.sport !== houses.1.sport
+    houses.0.sport !== houses.2.sport
+    houses.1.sport !== houses.2.sport
