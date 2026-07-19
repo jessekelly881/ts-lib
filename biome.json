@@ -6,9 +6,6 @@
 			"recommended": true
 		}
 	},
-	"organizeImports": {
-		"enabled": true
-	},
 	"vcs": {
 		"clientKind": "git",
 		"defaultBranch": "main",
