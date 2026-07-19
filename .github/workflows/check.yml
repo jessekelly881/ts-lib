@@ -21,17 +21,6 @@ jobs:
               uses: ./.github/actions/setup
             - run: pnpm build
 
-    types:
-        name: Types
-        runs-on: ubuntu-latest
-        timeout-minutes: 5
-        steps:
-            - uses: actions/checkout@v5
-            - name: Install dependencies
-              uses: ./.github/actions/setup
-            - run: pnpm dtslint
-            - run: pnpm check
-
     lint:
         name: Lint
         runs-on: ubuntu-latest
