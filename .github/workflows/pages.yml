@@ -16,19 +16,15 @@ jobs:
         runs-on: ubuntu-latest
         timeout-minutes: 10
         steps:
-            - uses: actions/checkout@v5
-            - name: Install dependencies
-              uses: ./.github/actions/setup
-            - run: pnpm docgen
+            - uses: actions/checkout@v7.0.1
             - name: Build pages Jekyll
-              if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-              uses: actions/jekyll-build-pages@v1
+              uses: actions/jekyll-build-pages@v1.0.13
               with:
                   source: ./docs
                   destination: ./_site
             - name: Upload pages artifact
               if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-              uses: actions/upload-pages-artifact@v4
+              uses: actions/upload-pages-artifact@v5.0.0
 
     deploy:
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -45,4 +41,4 @@ jobs:
         steps:
             - name: Deploy to GitHub Pages
               id: deployment
-              uses: actions/deploy-pages@v4
+              uses: actions/deploy-pages@v5.0.1

@@ -3,23 +3,38 @@ description: Perform standard setup and install dependencies using pnpm.
 inputs:
   node-version:
     description: The version of Node.js to install
-    required: true
-    default: 20.9.0
+    required: false
+    default: "26"
+
+outputs:
+  has-source:
+    description: Whether src contains library source files
+    value: ${{ steps.inputs.outputs.has-source }}
+  has-tests:
+    description: Whether conventional test files exist
+    value: ${{ steps.inputs.outputs.has-tests }}
 
 runs:
   using: composite
   steps:
     - name: Install pnpm
-      uses: pnpm/action-setup@v2
+      uses: pnpm/action-setup@v6.1.0
       with:
-        version: 7
+        version: 12.11.2
         
     - name: Install node
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v7.1.0
       with:
         cache: pnpm
         node-version: ${{ inputs.node-version }}
 
     - name: Install dependencies
       shell: bash
-      run: pnpm install --no-frozen-lockfile
+      run: pnpm install --frozen-lockfile
+
+    - name: Check source and test inputs
+      id: inputs
+      shell: bash
+      run: |
+        echo "has-source=${{ hashFiles('src/**/*.ts', 'src/**/*.tsx', 'src/**/*.js', 'src/**/*.jsx', 'src/**/*.mts', 'src/**/*.cts') != '' }}" >> "$GITHUB_OUTPUT"
+        echo "has-tests=${{ hashFiles('src/**/*.test.*', 'src/**/*.spec.*', 'tests/**/*.test.*', 'tests/**/*.spec.*', 'test/**/*.test.*', 'test/**/*.spec.*') != '' }}" >> "$GITHUB_OUTPUT"
