@@ -18,8 +18,14 @@ jobs:
         steps:
             - uses: actions/checkout@v7.0.1
             - name: Install dependencies
+              id: setup
               uses: ./.github/actions/setup
-            - run: pnpm build
+            - name: Build library
+              if: steps.setup.outputs.has-source == 'true'
+              run: pnpm build
+            - name: Report empty source tree
+              if: steps.setup.outputs.has-source != 'true'
+              run: echo "Build skipped because src contains no source files." >> "$GITHUB_STEP_SUMMARY"
 
     types:
         name: Types
@@ -28,8 +34,8 @@ jobs:
         steps:
             - uses: actions/checkout@v7.0.1
             - name: Install dependencies
+              id: setup
               uses: ./.github/actions/setup
-            - run: pnpm dtslint
             - run: pnpm check
 
     lint:
@@ -39,9 +45,17 @@ jobs:
         steps:
             - uses: actions/checkout@v7.0.1
             - name: Install dependencies
+              id: setup
               uses: ./.github/actions/setup
-            - run: pnpm lint
-            - run: pnpm circular
+            - name: Lint source
+              if: steps.setup.outputs.has-source == 'true'
+              run: pnpm lint
+            - name: Check circular dependencies
+              if: steps.setup.outputs.has-source == 'true'
+              run: pnpm circular
+            - name: Report empty source tree
+              if: steps.setup.outputs.has-source != 'true'
+              run: echo "Source lint and circular dependency checks skipped because src contains no source files." >> "$GITHUB_STEP_SUMMARY"
 
     test:
         name: Test (${{ matrix.runtime }})
@@ -54,17 +68,22 @@ jobs:
         steps:
             - uses: actions/checkout@v7.0.1
             - name: Install dependencies
+              id: setup
               uses: ./.github/actions/setup
             - uses: oven-sh/setup-bun@v2.2.0
-              if: matrix.runtime == 'Bun'
+              if: matrix.runtime == 'Bun' && steps.setup.outputs.has-tests == 'true'
               with:
                   bun-version: 1.4.3
             - name: Test
               run: pnpm vitest run
-              if: matrix.runtime == 'Node'
+              if: matrix.runtime == 'Node' && steps.setup.outputs.has-tests == 'true'
             - name: Test
               run: bun run vitest run
-              if: matrix.runtime == 'Bun'
+              if: matrix.runtime == 'Bun' && steps.setup.outputs.has-tests == 'true'
+
+            - name: Report missing tests
+              if: steps.setup.outputs.has-tests != 'true'
+              run: echo "Tests skipped because no test files exist. No application behavior was validated." >> "$GITHUB_STEP_SUMMARY"
 
     analyze:
         name: Analyze

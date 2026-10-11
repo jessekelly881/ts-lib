@@ -17,11 +17,7 @@ jobs:
         timeout-minutes: 10
         steps:
             - uses: actions/checkout@v7.0.1
-            - name: Install dependencies
-              uses: ./.github/actions/setup
-            - run: pnpm docgen
             - name: Build pages Jekyll
-              if: github.event_name == 'push' && github.ref == 'refs/heads/main'
               uses: actions/jekyll-build-pages@v1.0.13
               with:
                   source: ./docs
